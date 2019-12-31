@@ -128,8 +128,9 @@ def SA12(filename):
 def SA13(filename):
     print('-----------------SA13 연구파일 pdf변환을 시작합니다.---------------------')
     print('-----------------Excel File을 성공적으로 불러왔습니다.---------------------')
+    filename = 'SA13'
     # data_only = True로 해줘야 수식이 아닌 값으로 받아온다.
-    load_wb = load_workbook("C:\Users\JeongHwanSeock\PycharmProjects\PDF\\"+filename+".xlsx")
+    load_wb = load_workbook("C:\Users\JeongHwanSeock\PycharmProjects\PDF\\" + filename + ".xlsx")
     # 시트이름으로 불러오기
     load_ws = load_wb['Index']
     all_value = []
@@ -167,15 +168,20 @@ def SA13(filename):
         else:
             VV_1_1000 = df[index_up[i - 1] + 1:index_down[i]]
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Actual 1'], linestyle='', marker='o', color='blue')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Target 1'], linestyle='--', color='black')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Min Allowed 1'], linestyle=':', color='red')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Max Allowed 1'], linestyle=':', color='red')
+        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Actual 1'] / 4000, linestyle='', marker='o',
+                color='blue', label='Power')
+        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Target 1'] / 4000, color='black', label='VV curve')
+        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Min Allowed 1'] / 4000, linestyle=':', color='red',
+                label='VV pass/fail band')
+        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Max Allowed 1'] / 4000, linestyle=':', color='red')
         ax.set_title('Volt-Var Function1')
         ax.set_xlabel('Grid Voltage(% nominal)')
         ax.set_ylabel('Reactive Power(% nameplate)')
         ax.set_xticks([0.9, 0.95, 1, 1.05, 1.1])
         ax.set_xticklabels(['90', '95', '100', '105', '110'])
+        ax.set_yticks([-1.5, -1, -0.5, 0, 0.5, 1.0, 1.5])
+        ax.set_yticklabels(['-150', '-100', '-50', '0', '50', '100', '150'])
+
         plt.savefig('img/' + img_title + '.png')
 
     # 사용하기 위한 변수 선언
@@ -186,7 +192,7 @@ def SA13(filename):
     description = "사용자입력".decode('utf-8')
 
     # 제목
-    style_1 = style(document) # 스타일 설정
+    style_1 = style(document)  # 스타일 설정
     document.add_paragraph(title, style=style_1)
     last_paragraph = document.paragraphs[-1]
     last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -203,10 +209,10 @@ def SA13(filename):
         img_title = df['Dataset File'][index_down[i]]
         mer_title = str(p_title[i])
         document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
-        document.add_picture('img/' + str(img_title) + '.png', width=Inches(5)) # 그림 불러와서 넣기
+        document.add_picture('img/' + str(img_title) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>' # 캡션 달기
+        caption = '<' + str(mer_title) + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'))
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -238,5 +244,5 @@ def SA13(filename):
     doc.Close()
     word.Quit()
     print('-----------------PDF File을 성공적으로 만들었습니다.---------------------')
-# SA12('SA12')
+SA12('SA12')
 SA13('SA13')
