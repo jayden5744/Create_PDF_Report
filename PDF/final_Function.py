@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
+import os
+import docx
+import argparse
+import numpy as np
+import pandas as pd
+import comtypes.client
+from docx import Document
+from docx.oxml.ns import qn
+import win32com.client as win32
+import matplotlib.pyplot as plt
+from openpyxl import load_workbook
+from docx.shared import Inches, RGBColor
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-from openpyxl import load_workbook
-import pandas as pd
-from docx import Document
-import docx
-from docx.shared import Inches, RGBColor
-import numpy as np
-import os
-import comtypes.client
-import matplotlib.pyplot as plt
-from docx.oxml.ns import qn
-import argparse
-import win32com.client as win32
 
 def get_args():
     parser = argparse.ArgumentParser()
-    #feature infomation
+    # feature information
     parser.add_argument('--sa12', action='store_true', help='SA12파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa13', action='store_true', help='SA13파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--path', type=str, help='엑셀파일이 들어있는 폴더의 경로를 입력하세요.'.decode('utf-8'))
@@ -28,12 +28,13 @@ def get_args():
 
     return parser.parse_args()
 
+
 # 스타일 선언
 def style(document):
     style_1 = document.styles.add_style('Heading_1', docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER)
     style_1.base_style = document.styles['Heading 1']
-    style_1.font.name = 'HY견고딕'.decode('utf-8')
-    style_1._element.rPr.rFonts.set(qn('w:eastAsia'), 'HY견고딕'.decode('utf-8')) # 한글 폰트를 따로 설정해 준다
+    style_1.font.name = 'HY 견고딕'.decode('utf-8')
+    style_1._element.rPr.rFonts.set(qn('w:eastAsia'), 'HY 견고딕'.decode('utf-8'))  # 한글 폰트를 따로 설정해 준다
     style_1.font.size = docx.shared.Pt(15)
     style_1.font.bold = True
     style_1.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
@@ -45,35 +46,37 @@ def style(document):
     style_2.font.color.rgb = RGBColor(0x00, 0x00, 0x00)
     return style_1, style_2
 
-# xls파일을 xlsx로 변환
-def xls2xlsx(file, path):
-    if(path is None):
-        fname = str(file)+'.xls'
-    else:
-        fname = path + '\\' + file + ".xls"
-    excel = win32.gencache.EnsureDispatch('Excel.Application')
-    wb = excel.Workbooks.Open(fname)
 
-    wb.SaveAs(fname + "x", FileFormat=51)  # FileFormat = 51 is for .xlsx extension
+# xls파일을 xlsx로 변환
+def xls2xlsx(file_name, path):
+    if path is None:
+        f_name = str(file_name) + '.xls'
+    else:
+        f_name = path + '\\' + file_name + ".xls"
+    excel = win32.gencache.EnsureDispatch('Excel.Application')
+    wb = excel.Workbooks.Open(f_name)
+
+    wb.SaveAs(f_name + "x", FileFormat=51)  # FileFormat = 51 is for .xlsx extension
     wb.Close()  # FileFormat = 56 is for .xls extension
     excel.Application.Quit()
 
-def sa12(filename, title, description, path):
-    print('-----------------SA12 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8'))
+
+def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path):
+    print '-----------------SA12 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
     # data_only = True로 해줘야 수식이 아닌 값으로 받아온다.
-    if(path is None): # 파일과 같은 폴더에 있을 때
+    if sa12_path is None:  # 파일과 같은 폴더에 있을 때
         try:
-            load_wb = load_workbook(filename + ".xlsx")
-        except IOError: # xls파일인 경우
-            xls2xlsx(filename, path)
-            load_wb = load_workbook(filename + ".xlsx")
-    else: # 따로 경로를 지정했을 때
+            load_wb = load_workbook(sa12_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa12_name, sa12_path)
+            load_wb = load_workbook(sa12_name + ".xlsx")
+    else:  # 따로 경로를 지정했을 때
         try:
-            load_wb = load_workbook(str(path) + '\\'+filename + ".xlsx")
-        except IOError: # xls파일인 경우
-            xls2xlsx(filename, path)
-            load_wb = load_workbook(str(path) + '\\'+ filename + ".xlsx")
-    print('-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8'))
+            load_wb = load_workbook(str(sa12_path) + '\\' + sa12_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa12_name, sa12_path)
+            load_wb = load_workbook(str(sa12_path) + '\\' + sa12_name + ".xlsx")
+    print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
 
     # 시트이름으로 불러오기
     load_ws = load_wb['Index']
@@ -102,24 +105,18 @@ def sa12(filename, title, description, path):
 
     # 사용하기 위한 변수 선언
     document = Document()
-
-    title = title.decode('cp949')
-    title = unicode(title).encode('utf-8')
-    description = description.decode('cp949')
-    description = unicode(description).encode('utf-8')
-    # title = 'SPF(Specified Powr Factor) 기능'.decode('utf-8')
-    # description = "- 측정된 역률(Power Factor) 값과 설정한 역률 값이 차이가 제조사가 명시한 정확도 (Manufacturer's Stated Accuracy)내에 있는지 여부로 판단. " \
-    #               "피시험 인버터인 STP12000TL-US-10의 역률 정확도는 0.01이고 설정 가능 범위는 Minimum Capacitive Power Factor는 0.8, " \
-    #               "Minimum Inductive (Underexcited) Power Factor는 –0.8임.".decode('utf-8')
-
+    sa12_title = sa12_title.decode('cp949')
+    sa12_title = unicode(sa12_title).encode('utf-8')
+    sa12_description = sa12_description.decode('cp949')
+    sa12_description = unicode(sa12_description).encode('utf-8')
     # 제목
     style_1, style_2 = style(document)
-    document.add_paragraph(title.decode('utf-8'), style=style_1)
+    document.add_paragraph(sa12_title.decode('utf-8'), style=style_1)
     last_paragraph = document.paragraphs[-1]
     last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
     # 시험 설명
     document.add_paragraph('시험 설명'.decode('utf-8'), style='ListBullet')
-    document.add_paragraph(description.decode('utf-8'), style=style_2)
+    document.add_paragraph(sa12_description.decode('utf-8'), style=style_2)
     # 기능시험 결과
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
     num = df2['PF Target'].unique()
@@ -155,38 +152,38 @@ def sa12(filename, title, description, path):
     document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
 
     # docx파일을 생성을 위한 save('파일명')
-    document.save(filename.decode('utf-8')+'.docx')
-    print('-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8'))
+    document.save(sa12_name.decode('utf-8') + '.docx')
+    print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
 
-    wdFormatPDF = 17
     # 파일 경로 절대경로로
-    in_file = os.path.abspath(filename.decode('utf-8')+'.docx')
-    out_file = os.path.abspath(filename)
+    in_file = os.path.abspath(sa12_name.decode('utf-8') + '.docx')
+    out_file = os.path.abspath(sa12_name)
     # word형식의 파일을 열기
     word = comtypes.client.CreateObject('Word.Application')
     doc = word.Documents.Open(in_file)
     # PDF형식으로 저장
-    doc.SaveAs(out_file, FileFormat=wdFormatPDF)
+    doc.SaveAs(out_file, FileFormat=17)
     doc.Close()
     word.Quit()
-    print('-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8'))
+    print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
 
-def sa13(filename, title, description, path):
-    print('-----------------SA13 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8'))
+
+def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path):
+    print '-----------------SA13 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
     # data_only = True로 해줘야 수식이 아닌 값으로 받아온다.
-    if(path is None):  # 파일과 같은 폴더에 있을 때
+    if sa13_path is None:  # 파일과 같은 폴더에 있을 때
         try:
-            load_wb = load_workbook(filename + ".xlsx")
+            load_wb = load_workbook(sa13_name + ".xlsx")
         except IOError:  # xls파일인 경우
-            xls2xlsx(filename, path)
-            load_wb = load_workbook(filename + ".xlsx")
+            xls2xlsx(sa13_name, sa13_path)
+            load_wb = load_workbook(sa13_name + ".xlsx")
     else:  # 따로 경로를 지정했을 때
         try:
-            load_wb = load_workbook(str(path) + '\\' + filename + ".xlsx")
+            load_wb = load_workbook(str(sa13_path) + '\\' + sa13_name + ".xlsx")
         except IOError:  # xls파일인 경우
-            xls2xlsx(filename, path)
-            load_wb = load_workbook(str(path) + '\\' + filename + ".xlsx")
-    print('-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8'))
+            xls2xlsx(sa13_name, sa13_path)
+            load_wb = load_workbook(str(sa13_path) + '\\' + sa13_name + ".xlsx")
+    print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     # 시트이름으로 불러오기
     load_ws = load_wb['Index']
     all_value = []
@@ -219,17 +216,17 @@ def sa13(filename, title, description, path):
         plt.rcParams['axes.grid'] = True
 
         img_title = df['Dataset File'][index_down[i]]
-        if (i == 0):
-            VV_1_1000 = df[0:index_down[i]]
+        if i == 0:
+            vv_1_1000 = df[0:index_down[i]]
         else:
-            VV_1_1000 = df[index_up[i - 1] + 1:index_down[i]]
+            vv_1_1000 = df[index_up[i - 1] + 1:index_down[i]]
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Actual 1'] / 4000, linestyle='', marker='o',
+        ax.plot(vv_1_1000['Average Voltage (pu)'], vv_1_1000['Var Actual 1'] / 4000, linestyle='', marker='o',
                 color='blue', label='Power')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Target 1'] / 4000, color='black', label='VV curve')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Min Allowed 1'] / 4000, linestyle=':', color='red',
+        ax.plot(vv_1_1000['Average Voltage (pu)'], vv_1_1000['Var Target 1'] / 4000, color='black', label='VV curve')
+        ax.plot(vv_1_1000['Average Voltage (pu)'], vv_1_1000['Var Min Allowed 1'] / 4000, linestyle=':', color='red',
                 label='VV pass/fail band')
-        ax.plot(VV_1_1000['Average Voltage (pu)'], VV_1_1000['Var Max Allowed 1'] / 4000, linestyle=':', color='red')
+        ax.plot(vv_1_1000['Average Voltage (pu)'], vv_1_1000['Var Max Allowed 1'] / 4000, linestyle=':', color='red')
         ax.set_title('Volt-Var Function1')
         ax.set_xlabel('Grid Voltage(% nominal)')
         ax.set_ylabel('Reactive Power(% nameplate)')
@@ -242,19 +239,19 @@ def sa13(filename, title, description, path):
 
     # 사용하기 위한 변수 선언
     document = Document()
-    title = title.decode('cp949')
-    title = unicode(title).encode('utf-8')
-    description = description.decode('cp949')
-    description = unicode(description).encode('utf-8')
+    sa13_title = sa13_title.decode('cp949')
+    sa13_title = unicode(sa13_title).encode('utf-8')
+    sa13_description = sa13_description.decode('cp949')
+    sa13_description = unicode(sa13_description).encode('utf-8')
 
     # 제목
     style_1, style_2 = style(document)  # 스타일 설정
-    document.add_paragraph(title.decode('utf-8'), style=style_1)
+    document.add_paragraph(sa13_title.decode('utf-8'), style=style_1)
     last_paragraph = document.paragraphs[-1]
     last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
     # 시험설명
     document.add_paragraph('시험 설명'.decode('utf-8'), style='ListBullet')
-    document.add_paragraph(description.decode('utf-8'), style=style_2)
+    document.add_paragraph(sa13_description.decode('utf-8'), style=style_2)
     # 판정기준
     document.add_paragraph('판정기준'.decode('utf-8'), style='ListBullet')
     document.add_paragraph(str(load_ws['B2'].value).decode('utf-8'), style=style_2)
@@ -284,29 +281,29 @@ def sa13(filename, title, description, path):
     document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
 
     # docx파일을 생성을 위한 save('파일명')
-    document.save(filename.decode('utf-8')+'.docx')
-    print('-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8'))
-
-    wdFormatPDF = 17
+    document.save(sa13_name.decode('utf-8') + '.docx')
+    print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
 
     # 파일 경로 절대경로로
-    in_file = os.path.abspath(filename.decode('utf-8')+'.docx')
-    out_file = os.path.abspath(filename)
+    in_file = os.path.abspath(sa13_name.decode('utf-8') + '.docx')
+    out_file = os.path.abspath(sa13_name)
     # word형식의 파일을 열기
     word = comtypes.client.CreateObject('Word.Application')
     doc = word.Documents.Open(in_file)
     # PDF형식으로 저장
-    doc.SaveAs(out_file, FileFormat=wdFormatPDF)
+    doc.SaveAs(out_file, FileFormat=17)
     doc.Close()
     word.Quit()
-    print('-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8'))
+    print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
+
 
 if __name__ == '__main__':
     args = get_args()
     # -------------------------------------------------------------------------------------------------------------- #
     # command :
     #       - python final_Function.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명
-    #       - python final_Function.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명 --path 경로   [파일이 다른 경로에 있을때]
+    #       - python final_Function.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명 --path 경로
+    #       [파일이 다른 경로에 있을때]
     #
     #       ex) python final_Function.py --sa12 --filename SA12 --title 시험제목 --description 시험설명
     #       ex) python final_Function.py --sa13 --filename SA13 --title 시험제목 --description 시험설명 --path C:\\python
@@ -319,24 +316,24 @@ if __name__ == '__main__':
     # path : 해당 엑셀파일이 있는 폴더의 경로
     # -------------------------------------------------------------------------------------------------------------- #
     while True:
-        if(args.sa12):
+        if args.sa12:
             try:
-                sa12(args.filename, args.title, args.description, args.path)
+                convert_sa12(args.filename, args.title, args.description, args.path)
             except IOError:
                 print("파일을 찾지 못했습니다.".decode('utf-8'))
                 print('path: ' + args.path)
-                print('file name: '+args.filename)
+                print('file name: ' + args.filename)
 
-        elif(args.sa13):
+        elif args.sa13:
             try:
-                sa13(args.filename, args.title, args.description, args.path)
+                convert_sa13(args.filename, args.title, args.description, args.path)
             except IOError:
-                print("파일을 찾지 못했습니다.".decode('utf-8'))
-                print('path: ' + str(args.path).decode('utf-8'))
-                print('file name: '+args.filename.decode('utf-8'))
+                print "파일을 찾지 못했습니다.".decode('utf-8')
+                print 'path: ' + str(args.path).decode('utf-8')
+                print 'file name: ' + args.filename.decode('utf-8')
 
         repeat = raw_input('Do you want to continue?(y/n)'.decode('utf-8'))
-        if(repeat=='y' or repeat=='Y'):
+        if repeat == 'y' or repeat == 'Y':
             filename = raw_input('Enter the following file name.')
             title = raw_input('Enter the following title')
             description = raw_input('Enter the following file description')
@@ -345,5 +342,3 @@ if __name__ == '__main__':
             args.description = description
         else:
             break
-
-
