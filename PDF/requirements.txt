@@ -1,3 +1,5 @@
+xlrd
+docx
 backports.functools-lru-cache==1.6.1
 comtypes==1.1.7
 cycler==0.10.0
