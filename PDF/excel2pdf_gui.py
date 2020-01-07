@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import ttk
+import excel2pdf
 import tkFileDialog
-import final_Function
 from Tkinter import *
 
 
@@ -69,14 +69,19 @@ class Pdf:
         save_path = str(self.save_path)
 
         if file_type == 'SA12':
-            final_Function.convert_sa12(name, title, description, path, save_path)
+            excel2pdf.convert_sa12(name, title, description, path, save_path)
         elif file_type == 'SA13':
-            final_Function.convert_sa13(name, title, description, path, save_path)
+            excel2pdf.convert_sa13(name, title, description, path, save_path)
 
 
-if __name__ == '__main__':
+def init():
     root = Tk()
     root.title("PDF 변환기".decode('utf-8'))
     root.minsize(640, 400)
+    return root
+
+
+if __name__ == '__main__':
+    root = init()
     Pdf(root)
     root.mainloop()

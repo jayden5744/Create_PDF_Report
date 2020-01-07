@@ -7,6 +7,7 @@ import openpyxl
 import datetime
 import numpy as np
 import pandas as pd
+import excel2pdf_gui
 import comtypes.client
 from docx import Document
 from docx.oxml.ns import qn
@@ -22,6 +23,7 @@ sys.setdefaultencoding('utf-8')
 def get_args():
     parser = argparse.ArgumentParser()
     # feature information
+    parser.add_argument('--gui', action='store_true', help='GUI를 실행합니다.'.decode('utf-8'))
     parser.add_argument('--sa12', action='store_true', help='SA12파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa13', action='store_true', help='SA13파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--path', type=str, help='엑셀파일이 들어있는 폴더의 경로를 입력하세요.'.decode('utf-8'))
@@ -340,12 +342,12 @@ if __name__ == '__main__':
     args = get_args()
     # -------------------------------------------------------------------------------------------------------------- #
     # command :
-    #       - python final_Function.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명
-    #       - python final_Function.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명 --path 경로
+    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명
+    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명 --path 경로
     #       [파일이 다른 경로에 있을때]
     #
-    #       ex) python final_Function.py --sa12 --filename SA12 --title 시험제목 --description 시험설명
-    #       ex) python final_Function.py --sa13 --filename SA13 --title 시험제목 --description 시험설명 --path C:\\python
+    #       ex) python excel2pdf.py --sa12 --filename SA12 --title 시험제목 --description 시험설명
+    #       ex) python excel2pdf.py --sa13 --filename SA13 --title 시험제목 --description 시험설명 --path C:\\python
     #
     # sa12/sa13 : 시험파일의 종류
     # filename : 해당 폴더에 있는 파일 이름
@@ -355,7 +357,7 @@ if __name__ == '__main__':
     # path : 해당 엑셀파일이 있는 폴더의 경로
     # save_path : PDF의 저장 경로
     # -------------------------------------------------------------------------------------------------------------- #
-    while True:
+    while args.sa12 or args.sa13:
         args.title = unicode(args.title.decode('cp949'))
         args.description = unicode(args.description.decode('cp949'))
         if args.sa12:
@@ -384,3 +386,12 @@ if __name__ == '__main__':
             args.description = description
         else:
             break
+    # -------------------------------------------------------------------------------------------------------------- #
+    # command :
+    #       - python excel2pdf.py --gui
+    #
+    # -------------------------------------------------------------------------------------------------------------- #
+    if args.gui:
+        root = excel2pdf_gui.init()
+        excel2pdf_gui.Pdf(root)
+        root.mainloop()
