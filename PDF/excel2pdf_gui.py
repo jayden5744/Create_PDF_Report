@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+
 import ttk
 import excel2pdf
 import tkFileDialog
+import tkMessageBox
 from Tkinter import *
 
 
 class Pdf:
     def __init__(self, master):
+        self.message = tkMessageBox
         self.F = Frame(master)
         self.F.pack()
         self.path = ''
@@ -19,7 +22,7 @@ class Pdf:
 
         # 해당 파일종류 선택
         self.comb_box = ttk.Combobox(self.F)
-        self.comb_box['values'] = ("SA12", "SA13")
+        self.comb_box['values'] = ("SA09", "SA10", "SA12", "SA13")
         self.comb_box.pack()
         self.comb_box.set("시험종류 선택")
         self.comb_box.grid(row=1, column=1, sticky='w')
@@ -58,6 +61,9 @@ class Pdf:
         self.save_label = Label(self.F, text=self.save_path, anchor='w')
         self.save_label.grid(row=4, column=1, sticky='w')
 
+    def info(self):
+        self.message.showinfo("변환완료", 'Excel파일이 PDF로 변환되었습니다.')
+
     def convert_pdf(self):
         file_type = self.comb_box.get()
         name = self.path.split('/')[-1]
@@ -68,17 +74,25 @@ class Pdf:
         description = self.des_Text.get(1.0, 20.30)
         save_path = str(self.save_path)
 
-        if file_type == 'SA12':
+        if file_type == 'SA09':
+            excel2pdf.convert_sa09(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA10':
+            excel2pdf.convert_sa10(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA12':
             excel2pdf.convert_sa12(name, title, description, path, save_path)
+            self.info()
         elif file_type == 'SA13':
             excel2pdf.convert_sa13(name, title, description, path, save_path)
+            self.info()
 
 
 def init():
-    root = Tk()
-    root.title("PDF 변환기".decode('utf-8'))
-    root.minsize(640, 400)
-    return root
+    tk = Tk()
+    tk.title("PDF 변환기".decode('utf-8'))
+    tk.minsize(640, 400)
+    return tk
 
 
 if __name__ == '__main__':

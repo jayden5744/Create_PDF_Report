@@ -24,6 +24,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     # feature information
     parser.add_argument('--gui', action='store_true', help='GUI를 실행합니다.'.decode('utf-8'))
+    parser.add_argument('--sa09', action='store_true', help='SA9파일을 변환합니다.'.decode('utf-8'))
+    parser.add_argument('--sa10', action='store_true', help='SA10파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa12', action='store_true', help='SA12파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa13', action='store_true', help='SA13파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--path', type=str, help='엑셀파일이 들어있는 폴더의 경로를 입력하세요.'.decode('utf-8'))
@@ -31,7 +33,6 @@ def get_args():
     parser.add_argument('--filename', type=str, help='엑셀파일 이름을 입력하세요.'.decode('utf-8'))
     parser.add_argument('--title', type=str, help='시험제목을 입력하세요.'.decode('utf-8'))
     parser.add_argument('--description', default='', type=str, help='시험 설명을 입력하세요.'.decode('utf-8'))
-
     return parser.parse_args()
 
 
@@ -94,6 +95,293 @@ def xls2xlsx(name, path=None, **kw):
         book_xlsx.save(name + '.xlsx')
     else:
         book_xlsx.save(path + '/' + name + '.xlsx')
+
+
+def convert_sa09(sa09_name, sa09_title, sa09_description, sa09_path, sa09_save_path):
+    print '-----------------SA9 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
+    # data_only = True로 해줘야 수식이 아닌 값으로 받아온다.
+    if sa09_path is None:  # 파일과 같은 폴더에 있을 때
+        try:
+            load_wb = load_workbook(sa09_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa09_name, sa09_path)
+            load_wb = load_workbook(sa09_name + ".xlsx")
+    else:  # 따로 경로를 지정했을 때
+        try:
+            load_wb = load_workbook(str(sa09_path) + '/' + sa09_name + ".xlsx")
+            print(str(sa09_path) + '/' + sa09_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa09_name, sa09_path)
+            load_wb = load_workbook(str(sa09_path) + '/' + sa09_name + ".xlsx")
+    print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+
+    load_wb = load_workbook("C:/Users/JeongHwanSeock/Desktop/PDF/data/SA9.xlsx")
+    # 시트이름으로 불러오기
+    load_ws = load_wb['Index']
+    all_value = []
+    for row in load_ws.rows:
+        row_value = []
+        for cell in row:
+            row_value.append(cell.value)
+        all_value.append(row_value)
+    all_value = pd.DataFrame(all_value[1:])
+    p_title = all_value[1][1:].dropna(axis=0).reset_index(drop=True)  # 기능 시험 결과
+    r_title = all_value[2][1:].dropna(axis=0).reset_index(drop=True)  # 결과 검토
+    csv_name = all_value[all_value[0].str.contains('.csv') == True][0][1:].reset_index(drop=True).values
+    all_x_axis = []
+    all_y_axis = []
+    all_graph_title = []
+    for sheet_name in csv_name:
+        load_ws2 = load_wb[sheet_name]
+        value = []
+        for row1 in load_ws2.rows:
+            row_value = []
+            for cell in row1:
+                row_value.append(cell.value)
+            value.append(row_value)
+        value = pd.DataFrame(value[1:])
+        param = sheet_name.split('_')
+        if param[2] == 'all':
+            x_axis = value[0]
+            y_axis = value[[1, 2, 25]]
+            y_axis.columns = [0, 1, 2]
+            graph_title = 'Voltage Ride-Through LV1 All Phase, ' + str(param[3].split('.')[0]) + '% Power'
+        elif param[2] == 'p1':
+            x_axis = value[0]
+            y_axis = value[[1, 2, 25]]
+            y_axis.columns = [0, 1, 2]
+            graph_title = 'Voltage Ride-Through LV1 Phase A, ' + str(param[3].split('.')[0]) + '% Power'
+        elif param[2] == 'p2':
+            x_axis = value[0]
+            y_axis = value[[8, 9, 25]]
+            y_axis.columns = [0, 1, 2]
+            graph_title = 'Voltage Ride-Through LV1 Phase B, ' + str(param[3].split('.')[0]) + '% Power'
+        elif param[2] == 'p3':
+            x_axis = value[0]
+            y_axis = value[[15, 16, 25]]
+            y_axis.columns = [0, 1, 2]
+            graph_title = 'Voltage Ride-Through LV1 Phase C, ' + str(param[3].split('.')[0]) + '% Power'
+        else:
+            print('index에 있는 sheet 이름 중 all,pl,p2,p3 가 3번째에 들어가 있지 않습니다.')
+
+        all_x_axis.append(x_axis)
+        all_y_axis.append(y_axis)
+        all_graph_title.append(graph_title)
+
+    for i in range(len(all_x_axis)):
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        line1 = ax1.plot(all_x_axis[i], all_y_axis[i][0], color='b', label='AC_VRMS_A')
+        line2 = ax2.plot(all_x_axis[i], all_y_axis[i][1], color='r', label='AC_IRMS_A')
+        line3 = ax2.plot(all_x_axis[i], all_y_axis[i][2], color='k', linestyle='--', label='AC_IRMS_PASS')
+        ax1.set_xlabel('Time(secs)', size=15)
+        ax1.set_ylabel('Voltage(V)', size=15)
+        ax2.set_ylabel('Current(A)', size=15)
+        ax1.set_xlim(10, 100)
+        ax1.set_ylim(180, 340)
+        ax2.set_ylim(0, 5)
+        ax1.set_title(all_graph_title[i])
+        lines = line1 + line2 + line3
+        labels = ['AC_VRMS_A', 'AC_IRMS_A', 'AC_IRMS_PASS']
+        plt.legend(lines, labels, loc=3)
+        plt.grid(True)
+        fig.tight_layout()
+        plt.savefig('img/' + str(csv_name[i].split('.')[0]) + '.png')
+    # 사용하기 위한 변수 선언
+    document = Document()
+    sa09_title = sa09_title.encode('utf-8')
+    sa09_description = sa09_description.encode('utf-8')
+
+    # 제목
+    style_1, style_2 = style(document)  # 스타일 설정
+    document.add_paragraph(sa09_title.decode('utf-8'), style=style_1)
+    last_paragraph = document.paragraphs[-1]
+    last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+    # 시험설명
+    document.add_paragraph('시험 설명'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(sa09_description.decode('utf-8'), style=style_2)
+    # 판정기준
+    document.add_paragraph('판정기준'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['B2'].value).decode('utf-8'), style=style_2)
+
+    # 기능시험결과
+    document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
+    for i in range(len(p_title)):
+        mer_title = str(p_title[i])
+        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_picture('img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        document.add_paragraph(caption.decode('utf-8'), style=style_2)
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        try:
+            # 결과검토 / 결과검토가 없을경우 발생하는 에러를 위해 try except구문
+            temp = r_title[i]
+            mer_title2 = '* 결과검토: ' + temp
+            document.add_paragraph(mer_title2, style=style_2)
+        except KeyError:
+            pass
+    # 기능시험 결과 요약
+    document.add_paragraph('기능시험 결과 요약'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
+
+    # docx파일을 생성을 위한 save('파일명')
+    document.save(sa09_name.decode('utf-8') + '.docx')
+    print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+
+    # 파일 경로 절대경로로
+    in_file = os.path.abspath(sa09_name.decode('utf-8') + '.docx')
+    if sa09_save_path is None:
+        out_file = os.path.abspath(sa09_name)
+    else:
+        out_file = os.path.abspath(str(sa09_save_path) + '\\' + sa09_name)
+    # word형식의 파일을 열기
+    word = comtypes.client.CreateObject('Word.Application')
+    doc = word.Documents.Open(in_file)
+    # PDF형식으로 저장
+    doc.SaveAs(out_file, FileFormat=17)
+    doc.Close()
+    word.Quit()
+    print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
+
+
+def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_path):
+    print '-----------------SA10 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
+    # data_only = True로 해줘야 수식이 아닌 값으로 받아온다.
+    if sa10_path is None:  # 파일과 같은 폴더에 있을 때
+        try:
+            load_wb = load_workbook(sa10_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa10_name, sa10_path)
+            load_wb = load_workbook(sa10_name + ".xlsx")
+    else:  # 따로 경로를 지정했을 때
+        try:
+            load_wb = load_workbook(str(sa10_path) + '/' + sa10_name + ".xlsx")
+            print(str(sa10_path) + '/' + sa10_name + ".xlsx")
+        except IOError:  # xls파일인 경우
+            xls2xlsx(sa10_name, sa10_path)
+            load_wb = load_workbook(str(sa10_path) + '/' + sa10_name + ".xlsx")
+    print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+
+    load_wb = load_workbook("C:/Users/JeongHwanSeock/Desktop/PDF/data/SA10.xlsx")
+    # 시트이름으로 불러오기
+    load_ws = load_wb['Index']
+    all_value = []
+    for row in load_ws.rows:
+        row_value = []
+        for cell in row:
+            row_value.append(cell.value)
+        all_value.append(row_value)
+    all_value = pd.DataFrame(all_value[1:])
+    p_title = all_value[1][1:].dropna(axis=0).reset_index(drop=True)  # 기능 시험 결과
+    r_title = all_value[2][1:].dropna(axis=0).reset_index(drop=True)  # 결과 검토
+    csv_name = all_value[all_value[0].str.contains('.csv') == True][0][1:].reset_index(drop=True).values
+    all_x_axis = []
+    all_y_axis = []
+    all_graph_title = []
+    power = []
+    load_ws3 = load_wb['result_summary.csv']
+    for row in load_ws3.rows:
+        row_value = []
+        for cell in row:
+            row_value.append(cell.value)
+        power.append(row_value)
+    power = pd.DataFrame(power[1:])[4]
+    for sheet in range(len(csv_name)):
+        load_ws2 = load_wb[csv_name[sheet]]
+        value = []
+        for row1 in load_ws2.rows:
+            row_value = []
+            for cell in row1:
+                row_value.append(cell.value)
+            value.append(row_value)
+        value = pd.DataFrame(value[1:])
+        x_axis = value[0]
+        y_axis = value[[7, 2, 25]]
+        y_axis.columns = [0, 1, 2]
+        graph_title = 'Frequency Ride-Through LF1 (' + str(power[sheet]) + '% Power)'
+        all_x_axis.append(x_axis)
+        all_y_axis.append(y_axis)
+        all_graph_title.append(graph_title)
+    for i in range(len(all_x_axis)):
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        line1 = ax1.plot(all_x_axis[i], all_y_axis[i][0], color='b', label='AC_FREQ_A')
+        line2 = ax2.plot(all_x_axis[i], all_y_axis[i][1], color='r', label='AC_IRMS_A')
+        line3 = ax2.plot(all_x_axis[i], all_y_axis[i][2], color='k', linestyle='--', label='AC_IRMS_PASS')
+        ax1.set_xlabel('Time(secs)', size=15)
+        ax1.set_ylabel('Frequency(Hz)', size=15)
+        ax2.set_ylabel('Current(A)', size=15)
+        ax1.set_xlim(0, 1000)
+        ax1.set_ylim(58, 62.5)
+        ax2.set_ylim(0, 7)
+        ax1.set_title(all_graph_title[i])
+        lines = line1 + line2 + line3
+        labels = ['AC_FREQ_A', 'AC_IRMS_A', 'AC_IRMS_PASS']
+        plt.legend(lines, labels, loc=3)
+        plt.grid(True)
+        fig.tight_layout()
+        plt.savefig('img/' + str(csv_name[i].split('.')[0]) + '.png')
+    # 사용하기 위한 변수 선언
+    document = Document()
+    sa10_title = sa10_title.encode('utf-8')
+    sa10_description = sa10_description.encode('utf-8')
+
+    # 제목
+    style_1, style_2 = style(document)  # 스타일 설정
+    document.add_paragraph(sa10_title.decode('utf-8'), style=style_1)
+    last_paragraph = document.paragraphs[-1]
+    last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+    # 시험설명
+    document.add_paragraph('시험 설명'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(sa10_description.decode('utf-8'), style=style_2)
+    # 판정기준
+    document.add_paragraph('판정기준'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['B2'].value).decode('utf-8'), style=style_2)
+
+    # 기능시험결과
+    document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
+    for i in range(len(p_title)):
+        mer_title = str(p_title[i])
+        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_picture('img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        document.add_paragraph(caption.decode('utf-8'), style=style_2)
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        try:
+            # 결과검토 / 결과검토가 없을경우 발생하는 에러를 위해 try except구문
+            temp = r_title[i]
+            mer_title2 = '* 결과검토: ' + temp
+            document.add_paragraph(mer_title2, style=style_2)
+        except KeyError:
+            pass
+    # 기능시험 결과 요약
+    document.add_paragraph('기능시험 결과 요약'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
+
+    # docx파일을 생성을 위한 save('파일명')
+    document.save(sa10_name.decode('utf-8') + '.docx')
+    print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+
+    # 파일 경로 절대경로로
+    in_file = os.path.abspath(sa10_name.decode('utf-8') + '.docx')
+    if sa10_save_path is None:
+        out_file = os.path.abspath(sa10_name)
+    else:
+        out_file = os.path.abspath(str(sa10_save_path) + '\\' + sa10_name)
+    # word형식의 파일을 열기
+    word = comtypes.client.CreateObject('Word.Application')
+    doc = word.Documents.Open(in_file)
+    # PDF형식으로 저장
+    doc.SaveAs(out_file, FileFormat=17)
+    doc.Close()
+    word.Quit()
+    print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
 
 
 def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path=None, sa12_save_path=None):
@@ -342,14 +630,14 @@ if __name__ == '__main__':
     args = get_args()
     # -------------------------------------------------------------------------------------------------------------- #
     # command :
-    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명
-    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title 시험제목 --description 시험설명 --path 경로
+    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title "시험제목" --description "시험설명"
+    #       - python excel2pdf.py --파일종류 --filename 파일이름 --title "시험제목" --description "시험설명" --path 경로
     #       [파일이 다른 경로에 있을때]
     #
-    #       ex) python excel2pdf.py --sa12 --filename SA12 --title 시험제목 --description 시험설명
-    #       ex) python excel2pdf.py --sa13 --filename SA13 --title 시험제목 --description 시험설명 --path C:\\python
+    #       ex) python excel2pdf.py --sa12 --filename SA12 --title "시험제목" --description "시험설명"
+    #       ex) python excel2pdf.py --sa13 --filename SA13 --title "시험제목" --description "시험설명" --path C:\\python
     #
-    # sa12/sa13 : 시험파일의 종류
+    # sa09/sa10/sa12/sa13 : 시험파일의 종류
     # filename : 해당 폴더에 있는 파일 이름
     # title : PDF 제목으로 들어가게될 내용
     # optional
@@ -357,10 +645,24 @@ if __name__ == '__main__':
     # path : 해당 엑셀파일이 있는 폴더의 경로
     # save_path : PDF의 저장 경로
     # -------------------------------------------------------------------------------------------------------------- #
-    while args.sa12 or args.sa13:
+    while args.sa12 or args.sa13 or args.sa09 or args.sa10:
         args.title = unicode(args.title.decode('cp949'))
         args.description = unicode(args.description.decode('cp949'))
-        if args.sa12:
+        if args.sa09:
+            try:
+                convert_sa09(args.filename, args.title, args.description, args.path, args.save_path)
+            except IOError:
+                print "파일을 찾지 못했습니다.".decode('utf-8')
+                print 'path: ' + args.path
+                print 'file name: ' + args.filename
+        elif args.sa10:
+            try:
+                convert_sa10(args.filename, args.title, args.description, args.path, args.save_path)
+            except IOError:
+                print "파일을 찾지 못했습니다.".decode('utf-8')
+                print 'path: ' + args.path
+                print 'file name: ' + args.filename
+        elif args.sa12:
             try:
                 convert_sa12(args.filename, args.title, args.description, args.path, args.save_path)
             except IOError:
