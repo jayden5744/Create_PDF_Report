@@ -22,7 +22,7 @@ class Pdf:
 
         # 해당 파일종류 선택
         self.comb_box = ttk.Combobox(self.F)
-        self.comb_box['values'] = ("SA09", "SA10", "SA12", "SA13")
+        self.comb_box['values'] = ("SA09", "SA10", "SA12", "SA13", "SA14")
         self.comb_box.pack()
         self.comb_box.set("시험종류 선택")
         self.comb_box.grid(row=1, column=1, sticky='w')
@@ -85,6 +85,9 @@ class Pdf:
             self.info()
         elif file_type == 'SA13':
             excel2pdf.convert_sa13(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA14':
+            excel2pdf.convert_sa14(name, title, description, path, save_path)
             self.info()
 
 
