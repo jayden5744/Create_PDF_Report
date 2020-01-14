@@ -22,7 +22,7 @@ class Pdf:
 
         # 해당 파일종류 선택
         self.comb_box = ttk.Combobox(self.F)
-        self.comb_box['values'] = ("SA09", "SA10", "SA12", "SA13", "SA14")
+        self.comb_box['values'] = ("SA8", "SA9", "SA9_1", "SA10", "SA10_1", "SA11",  "SA12", "SA13", "SA14", "SA15")
         self.comb_box.pack()
         self.comb_box.set("시험종류 선택")
         self.comb_box.grid(row=1, column=1, sticky='w')
@@ -74,11 +74,23 @@ class Pdf:
         description = self.des_Text.get(1.0, 20.30)
         save_path = str(self.save_path)
 
-        if file_type == 'SA09':
-            excel2pdf.convert_sa09(name, title, description, path, save_path)
+        if file_type == 'SA8':
+            excel2pdf.convert_sa8(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA9':
+            excel2pdf.convert_sa9(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA9_1':
+            excel2pdf.convert_sa9_1(name, title, description, path, save_path)
             self.info()
         elif file_type == 'SA10':
             excel2pdf.convert_sa10(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA10_1':
+            excel2pdf.convert_sa10_1(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA11':
+            excel2pdf.convert_sa9(name, title, description, path, save_path)
             self.info()
         elif file_type == 'SA12':
             excel2pdf.convert_sa12(name, title, description, path, save_path)
@@ -88,6 +100,9 @@ class Pdf:
             self.info()
         elif file_type == 'SA14':
             excel2pdf.convert_sa14(name, title, description, path, save_path)
+            self.info()
+        elif file_type == 'SA15':
+            excel2pdf.convert_sa15(name, title, description, path, save_path)
             self.info()
 
 
