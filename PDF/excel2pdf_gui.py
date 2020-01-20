@@ -90,7 +90,7 @@ class Pdf:
             excel2pdf.convert_sa10_1(name, title, description, path, save_path)
             self.info()
         elif file_type == 'SA11':
-            excel2pdf.convert_sa9(name, title, description, path, save_path)
+            excel2pdf.convert_sa11(name, title, description, path, save_path)
             self.info()
         elif file_type == 'SA12':
             excel2pdf.convert_sa12(name, title, description, path, save_path)

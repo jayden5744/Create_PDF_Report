@@ -2,6 +2,7 @@
 import os
 import docx
 import xlrd
+import math
 import argparse
 import openpyxl
 import datetime
@@ -14,8 +15,10 @@ from docx.oxml.ns import qn
 import matplotlib.pyplot as plt
 from openpyxl import load_workbook
 import matplotlib.font_manager as fm
+from matplotlib.tri import Triangulation
 from docx.shared import Inches, RGBColor
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -60,6 +63,17 @@ def style(document):
     return style_1, style_2
 
 
+def _get_xlrd_cell_value(cell):
+    value = cell.value
+    if cell.ctype == xlrd.XL_CELL_DATE:
+        datetime_tup = xlrd.xldate_as_tuple(value, 0)
+        if datetime_tup[0:3] == (0, 0, 0):  # time format without date
+            value = datetime.time(*datetime_tup[3:])
+        else:
+            value = datetime.datetime(*datetime_tup)
+    return value
+
+
 # xls파일을 xlsx로 변환
 def xls2xlsx(name, path=None, **kw):
     if path is None:
@@ -81,17 +95,6 @@ def xls2xlsx(name, path=None, **kw):
             rlo, rhi, clo, chi = c_range
             sheet_xlsx.merge_cells(start_row=rlo + 1, end_row=rhi,
                                    start_column=clo + 1, end_column=chi, )
-
-        def _get_xlrd_cell_value(cell):
-            value = cell.value
-            if cell.ctype == xlrd.XL_CELL_DATE:
-                datetime_tup = xlrd.xldate_as_tuple(value, 0)
-                if datetime_tup[0:3] == (0, 0, 0):  # time format without date
-                    value = datetime.time(*datetime_tup[3:])
-                else:
-                    value = datetime.datetime(*datetime_tup)
-            return value
-
         for row in range(sheet_xls.nrows):
             sheet_xlsx.append((
                 _get_xlrd_cell_value(cell)
@@ -156,6 +159,17 @@ def make_pdf(name, save_path):
     word.Quit()
 
 
+def boundary(lst):
+    result = []
+    for i in lst:
+        temp = (1 - abs(i) ** 2) ** 0.5
+        if i > 0:
+            result.append(temp)
+        else:
+            result.append(-temp)
+    return result
+
+
 def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
     print '-----------------SA8 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
     load_wb = load_excel(sa8_name, sa8_path)
@@ -211,7 +225,7 @@ def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
         plt.legend(lines, labels, loc=1)
         plt.grid(True)
         fig.tight_layout()
-        create_folder(sa8_path + '/img')     # 폴더가 존재하는지 확인하고 없으면 생성
+        create_folder(sa8_path + '/img')  # 폴더가 존재하는지 확인하고 없으면 생성
         plt.savefig('img/' + str(sheet_name.split('.')[0]) + '.png')
 
     # 사용하기 위한 변수 선언
@@ -706,6 +720,108 @@ def convert_sa10_1(sa10_1_name, sa10_1_title, sa10_1_description, sa10_1_path, s
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
 
 
+def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_path):
+    print '-----------------SA11 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
+    load_wb = load_excel(sa11_name, sa11_path)
+    print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+    # 시트이름으로 불러오기
+    load_ws = load_wb['Index']
+    all_value = []
+    for row in load_ws.rows:
+        row_value = []
+        for cell in row:
+            row_value.append(cell.value)
+        all_value.append(row_value)
+    all_value = pd.DataFrame(all_value[1:])
+    p_title = all_value[1][1:].dropna(axis=0).reset_index(drop=True)  # 기능 시험 결과
+    r_title = all_value[2][1:].dropna(axis=0).reset_index(drop=True)  # 결과 검토
+    csv_name = all_value[all_value[0].str.contains('.csv') == True][0][1:].reset_index(drop=True).values
+
+    for sheet_name in csv_name:
+        load_ws2 = load_wb[sheet_name]
+        value = []
+        for row1 in load_ws2.rows:
+            row_value = []
+            for cell in row1:
+                row_value.append(cell.value)
+            value.append(row_value)
+        value = pd.DataFrame(value[1:])
+        df = value[[0, 3]]
+        df.columns = ['TIME', 'AC_P_1']
+        load_ws3 = load_wb[str(sheet_name.split('.csv')[0]) + '_plot']
+        value2 = []
+        for row2 in load_ws3.rows:
+            row_value2 = []
+            for cell2 in row2:
+                row_value2.append(cell2.value)
+            value2.append(row_value2)
+        value2 = pd.DataFrame(value2[1:])
+        value2.columns = ['time_min', 'min', 'time_max', 'max']
+
+        fig = plt.figure()
+        plt.rcParams["figure.figsize"] = (10, 6)
+        plt.rcParams['axes.grid'] = True
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(df['TIME'], df['AC_P_1'], color='b')
+        ax.plot(value2['time_min'], value2['min'], color='r', linestyle='--', label='min')
+        ax.plot(value2['time_max'], value2['max'], color='r', linestyle='--', label='max')
+        ax.set_xlim(0, 30)
+        plt.xlabel('Time(secs)', size=10)
+        plt.ylabel('Power(W)', size=10)
+        plt.legend(['AC_P_1', 'min', 'max'])
+        plt.grid(True)
+        fig.tight_layout()
+        create_folder(sa11_path + '/img')
+        plt.savefig('img/' + str(sheet_name.split('.csv')[0]) + '.png')
+
+    # 사용하기 위한 변수 선언
+    document = Document()
+    sa11_title = sa11_title.encode('utf-8')
+    sa11_description = sa11_description.encode('utf-8')
+
+    # 제목
+    style_1, style_2 = style(document)  # 스타일 설정
+    document.add_paragraph(sa11_title.decode('utf-8'), style=style_1)
+    last_paragraph = document.paragraphs[-1]
+    last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+    # 시험설명
+    document.add_paragraph('시험 설명'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(sa11_description.decode('utf-8'), style=style_2)
+    # 판정기준
+    document.add_paragraph('판정기준'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['B2'].value).decode('utf-8'), style=style_2)
+
+    # 기능시험결과
+    document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
+    for i in range(len(p_title)):
+        mer_title = str(p_title[i])
+        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_picture('img/' + str(csv_name[i].split('.csv')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        document.add_paragraph(caption.decode('utf-8'), style=style_2)
+        last_paragraph = document.paragraphs[-1]
+        last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+        try:
+            # 결과검토 / 결과검토가 없을경우 발생하는 에러를 위해 try except구문
+            temp = r_title[i]
+            mer_title2 = '* 결과검토: ' + temp
+            document.add_paragraph(mer_title2, style=style_2)
+        except KeyError:
+            pass
+    # 기능시험 결과 요약
+    document.add_paragraph('기능시험 결과 요약'.decode('utf-8'), style='ListBullet')
+    document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
+
+    create_folder(sa11_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
+    # docx파일을 생성을 위한 save('파일명')
+    document.save('doxs/' + sa11_name.decode('utf-8') + '.docx')
+    print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
+    make_pdf(sa11_name, sa11_save_path)
+    print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
+
+
 def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_path):
     print '-----------------SA12 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
     load_wb = load_excel(sa12_name, sa12_path)
@@ -735,6 +851,76 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     data = all_values[1:]
     df = pd.DataFrame(data=data, columns=column)
     df2 = df[['Power Level (%)', 'Iteration', 'PF Target', 'PF Actual 1', 'PF Actual 2', 'PF Actual 3']]
+    df3 = df[
+        ['PF Target', 'Power 1 (pu)', 'Reactive Power 1 (pu)', 'Power 2 (pu)', 'Reactive Power 2 (pu)', 'Power 3 (pu)',
+         'Reactive Power 3 (pu)']]
+
+    fig = plt.figure()
+    plt.rcParams["figure.figsize"] = (20, 20)
+    ax = fig.add_subplot(1, 1, 1)
+    # circle 그리기
+    circle_center = (0, 0)
+    circle_radius = 1
+    for i in range(10):
+        c = plt.Circle(circle_center, circle_radius, fc='w', ec='#A9A9A9')
+        ax.add_patch(c)
+        circle_radius -= 0.1
+    # circle 보조축
+    for i in range(0, 361, 30):
+        radian = i * math.pi / 180
+        start_x = 0 + (math.cos(radian) * 0.1)
+        start_y = 0 + (math.sin(radian) * 0.1)
+        end_x = 0 + (math.cos(radian) * 1)
+        end_y = 0 + (math.sin(radian) * 1)
+        plt.plot([start_x, end_x], [start_y, end_y], color='#A9A9A9')
+
+    # 시험 결과 가져와서 나타내기
+    target_lst = [1, 0.8, 0.9, -0.8, -0.9]
+    c_lst = ['b', 'g', 'r', 'c', 'y']  # marker 색깔
+    m_lst = ['s', 'v', 'o']  # marker 모양
+    x_lst = ['Power 1 (pu)', 'Power 2 (pu)', 'Power 3 (pu)']
+    y_lst = ['Reactive Power 1 (pu)', 'Reactive Power 2 (pu)', 'Reactive Power 3 (pu)']
+    pf_min = boundary(df['PF Min Allowed'].unique())  # PF Pass.Fail
+    pf_max = boundary(df['PF Max Allowed'].unique())  # PF Pass.Fail
+    data_label = ['Phase A, PF = ', 'Phase B, PF =', 'Phase C, PF =']
+    for i in range(len(target_lst)):
+        temp = df3[df3['PF Target'] == target_lst[i]]
+        x_max = max(temp['Power 1 (pu)'].max(), temp['Power 2 (pu)'].max(), temp['Power 3 (pu)'].max())
+        if temp['Reactive Power 1 (pu)'].max() > 0:
+            y_max = max(temp['Reactive Power 1 (pu)'].max(), temp['Reactive Power 2 (pu)'].max(),
+                        temp['Reactive Power 3 (pu)'].max())
+        else:
+            y_max = min(temp['Reactive Power 1 (pu)'].min(), temp['Reactive Power 2 (pu)'].min(),
+                        temp['Reactive Power 3 (pu)'].min())
+        if i == 0:
+            plt.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--')
+            plt.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
+                     label='PF Pass/Fail Boundary')  # PF Pass/Fail max
+            plt.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')  # PF Target
+        else:
+            plt.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--')  # 두번째부터 범례 표시X
+            plt.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--')  # 두번째부터 범례 표시X
+            plt.plot([0, x_max], [0, y_max], color='k', linestyle='--')  # 두번째부터 범례 표시X
+
+        for j in range(len(x_lst)):
+            triang = Triangulation(temp[str(x_lst[j])], temp[str(y_lst[j])])
+            ax.triplot(triang, linestyle='', marker=m_lst[j], markersize=5, alpha=0.5, color=c_lst[i],
+                       label=data_label[j] + str(target_lst[i]))
+
+    ax.set_aspect('equal')  # 정사각형
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    ax.set_xticks([-1.0, 0, +1.0])
+    ax.set_xticklabels(["-100", "0", "100"])
+    ax.set_yticks([-1.0, 0, +1.0], ["-100", "0", "100"])
+    ax.set_yticklabels(["-100", "0", "100"])
+    ax.set_xlabel('Active Power (% nameplate)', size=10)
+    ax.set_ylabel('Reactive Power(% nameplate)', size=10)
+    ax.set_title('Specified Power Factor', size=10)
+    plt.legend(loc=3, fontsize='xx-small')  # 범례 위치
+    plt.grid(False)
+    create_folder(sa12_path + '/img')
+    plt.savefig('img/' + str(sa12_name) + '.png')
 
     # 사용하기 위한 변수 선언
     document = Document()
@@ -750,9 +936,14 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     document.add_paragraph(sa12_description.decode('utf-8'), style=style_2)
     # 기능시험 결과
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
+    document.add_picture('img/' + str(sa12_name) + '.png', width=Inches(5))  # 그림 불러와서 넣기
+    last_paragraph = document.paragraphs[-1]
+    last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
+    caption = '<' + str('Specified Power Factor 시험 전체 결과') + '>'  # 캡션 달기
+    document.add_paragraph(caption.decode('utf-8'), style=style_2)
+
     num = df2['PF Target'].unique()
     num = np.sort(num[1:])
-
     # 테이블 작성
     for i in range(len(p_title)):
         mer_title = p_title[i]
@@ -1014,7 +1205,6 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
     print '-----------------SA15 연구파일 pdf변환을 시작합니다.---------------------'.decode('utf-8')
     load_wb = load_excel(sa15_name, sa15_path)
     print '-----------------Excel File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
-
     # 시트이름으로 불러오기
     load_ws = load_wb['Index']
     all_value = []
@@ -1056,7 +1246,6 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
         value2 = pd.DataFrame(value2[1:])
         value2.columns = column2
         fig = plt.figure()
-        fontprop = change_font()
         plt.rcParams["figure.figsize"] = (10, 6)
         plt.rcParams['axes.grid'] = True
         ax = fig.add_subplot(1, 1, 1)
@@ -1064,10 +1253,11 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
         ax.plot(value2['Voltage'], value2['target'], color='k', label='target')
         ax.plot(value2['Voltage'], value2['min'], color='r', linestyle='--', label='min')
         ax.plot(value2['Voltage'], value2['max'], color='r', linestyle='--', label='max')
-        ax.set_xlim(58, 66)
+        x_min = min(graph_df['AC_VRMS_1'].min(), value2['Voltage'].min()) - 1
+        x_max = max(graph_df['AC_VRMS_1'].max(), value2['Voltage'].max()) + 1
+        ax.set_xlim(x_min, x_max)
         plt.xlabel('Frequence(Hz)', size=10)
         plt.ylabel('Active Power(W)', size=10)
-        plt.title('FW Characterastic Curve 2 시험'.decode('utf-8'), fontproperties=fontprop, size=15)
         plt.legend(['100% Power', 'FW curve', 'FW curve min', 'FW curve max'])
         plt.grid(True)
         fig.tight_layout()
@@ -1183,7 +1373,7 @@ if __name__ == '__main__':
                 print 'file name: ' + args.filename.decode('utf-8')
         elif args.sa11:
             try:
-                convert_sa10(args.filename, args.title, args.description, args.path, args.save_path)
+                convert_sa11(args.filename, args.title, args.description, args.path, args.save_path)
             except IOError:
                 print "파일을 찾지 못했습니다.".decode('utf-8')
                 print 'path: ' + str(args.path).decode('utf-8')
