@@ -24,7 +24,7 @@ matplotlib==2.2.4
 mkl-fft==1.0.15
 mkl-service==2.3.0
 numpy==1.16.6
-openpyxl==2.4.0
+openpyxl==2.3.0
 pandas==0.24.2
 pathlib2==2.3.5
 pdfrw==0.4

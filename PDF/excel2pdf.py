@@ -15,10 +15,8 @@ from docx.oxml.ns import qn
 import matplotlib.pyplot as plt
 from openpyxl import load_workbook
 import matplotlib.font_manager as fm
-from matplotlib.tri import Triangulation
 from docx.shared import Inches, RGBColor
 import sys
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -862,7 +860,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     circle_center = (0, 0)
     circle_radius = 1
     for i in range(10):
-        c = plt.Circle(circle_center, circle_radius, fc='w', ec='#A9A9A9')
+        c = plt.Circle(circle_center, circle_radius, fc='w', ec='#A9A9A9', label='_circle axis')
         ax.add_patch(c)
         circle_radius -= 0.1
     # circle 보조축
@@ -872,12 +870,12 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
         start_y = 0 + (math.sin(radian) * 0.1)
         end_x = 0 + (math.cos(radian) * 1)
         end_y = 0 + (math.sin(radian) * 1)
-        plt.plot([start_x, end_x], [start_y, end_y], color='#A9A9A9')
+        plt.plot([start_x, end_x], [start_y, end_y], color='#A9A9A9', label='_circle axis')
 
     # 시험 결과 가져와서 나타내기
     target_lst = [1, 0.8, 0.9, -0.8, -0.9]
     c_lst = ['b', 'g', 'r', 'c', 'y']  # marker 색깔
-    m_lst = ['s', 'v', 'o']  # marker 모양
+    m_lst = ['v', 'o', 's']  # marker 모양
     x_lst = ['Power 1 (pu)', 'Power 2 (pu)', 'Power 3 (pu)']
     y_lst = ['Reactive Power 1 (pu)', 'Reactive Power 2 (pu)', 'Reactive Power 3 (pu)']
     pf_min = boundary(df['PF Min Allowed'].unique())  # PF Pass.Fail
@@ -893,20 +891,20 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
             y_max = min(temp['Reactive Power 1 (pu)'].min(), temp['Reactive Power 2 (pu)'].min(),
                         temp['Reactive Power 3 (pu)'].min())
         if i == 0:
-            plt.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--')
-            plt.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
-                     label='PF Pass/Fail Boundary')  # PF Pass/Fail max
-            plt.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')  # PF Target
+            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')  # PF Target
+            ax.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--', label='_PF Pass/Fail Boundary')
+            ax.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
+                    label='PF Pass/Fail Boundary')  # PF Pass/Fail max
         else:
-            plt.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--')  # 두번째부터 범례 표시X
-            plt.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--')  # 두번째부터 범례 표시X
-            plt.plot([0, x_max], [0, y_max], color='k', linestyle='--')  # 두번째부터 범례 표시X
+            ax.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--',
+                    label='_PF Pass/Fail Boundary')  # 두번째부터 범례 표시X
+            ax.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
+                    label='_PF Pass/Fail Boundary')  # 두번째부터 범례 표시X
+            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='_PF target')  # 두번째부터 범례 표시X
 
         for j in range(len(x_lst)):
-            triang = Triangulation(temp[str(x_lst[j])], temp[str(y_lst[j])])
-            ax.triplot(triang, linestyle='', marker=m_lst[j], markersize=5, alpha=0.5, color=c_lst[i],
-                       label=data_label[j] + str(target_lst[i]))
-
+            ax.plot(temp[str(x_lst[j])], temp[str(y_lst[j])], linestyle='', marker=m_lst[j], c=c_lst[i], markersize=5,
+                    alpha=0.5, label=(data_label[j] + str(target_lst[i])))
     ax.set_aspect('equal')  # 정사각형
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
@@ -917,7 +915,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     ax.set_xlabel('Active Power (% nameplate)', size=10)
     ax.set_ylabel('Reactive Power(% nameplate)', size=10)
     ax.set_title('Specified Power Factor', size=10)
-    plt.legend(loc=3, fontsize='xx-small')  # 범례 위치
+    plt.legend(loc=3, fontsize='small')  # 범례 위치
     plt.grid(False)
     create_folder(sa12_path + '/img')
     plt.savefig('img/' + str(sa12_name) + '.png')
@@ -941,6 +939,8 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
     caption = '<' + str('Specified Power Factor 시험 전체 결과') + '>'  # 캡션 달기
     document.add_paragraph(caption.decode('utf-8'), style=style_2)
+    last_paragraph = document.paragraphs[-1]
+    last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
 
     num = df2['PF Target'].unique()
     num = np.sort(num[1:])
