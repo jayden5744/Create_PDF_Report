@@ -43,7 +43,7 @@ def get_args():
     return parser.parse_args()
 
 
-# 스타일 선언
+# document에 들어가는 글에 스타일을 지정할 수 있다.
 def style(document):
     style_1 = document.styles.add_style('Heading_1', docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER)
     style_1.base_style = document.styles['Heading 1']
@@ -1323,7 +1323,7 @@ if __name__ == '__main__':
     #       ex) python excel2pdf.py --sa12 --filename SA12 --title "시험제목" --description "시험설명"
     #       ex) python excel2pdf.py --sa13 --filename SA13 --title "시험제목" --description "시험설명" --path C:\\python
     #
-    # sa09/sa10/sa12/sa13/sa14 : 시험파일의 종류
+    # sa08/sa09/sa9_1/sa10/sa10_1/sa11/sa12/sa13/sa14/sa15 : 시험파일의 종류
     # filename : 해당 폴더에 있는 파일 이름
     # title : PDF 제목으로 들어가게될 내용
     # optional

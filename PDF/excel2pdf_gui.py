@@ -15,7 +15,7 @@ class Pdf:
         self.path = ''
         self.save_path = ''
         # 파일경로
-        self.path_b = Button(self.F, text='파일경로'.decode('utf-8'), command=lambda: self.path_button_press())
+        self.path_b = Button(self.F, text='파일경로'.decode('utf-8'), command=lambda: self.path_button_press(), width=10)
         self.path_b.grid(row=0, column=0)
         self.path_label = Label(self.F, text=self.path, anchor='center')
         self.path_label.grid(row=0, column=1, columnspan=3, sticky='ew')
@@ -50,7 +50,7 @@ class Pdf:
         self.convert_b.grid(row=4, column=3, sticky='ew')
 
     def path_button_press(self):
-        value = tkFileDialog.askopenfilename()
+        value = tkFileDialog.askopenfilename(parent=self.F)
         self.path = value
         self.path_label = Label(self.F, text=self.path, anchor='center')
         self.path_label.grid(row=0, column=1, columnspan=3, sticky='ew')
