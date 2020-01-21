@@ -22,7 +22,7 @@
  - python excel2pdf.py --sa12 --filename "SA12"
  - python excel2pdf.py --sa15 --filename "SA15" --title "실험제목" --description "시험설명" --path "C://Users" --save_path "C://Users/save_folder"
  
- ![CLI예제](.//img/CLI예제.png)
+ ![CLI예제](/PDF/img/CLI예제.png)
  - do you want to continue? : 같은 실험의 다른 파일을 변환하고 싶으면 y, 마치고 싶으면 n
  - Enter the following file name : 다음 엑셀파일의 이름
  - Enter the following title : 다음 파일 실험보고서에 제목으로 들어가게 될 내용
