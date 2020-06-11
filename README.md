@@ -1,7 +1,19 @@
 # Create_PDF_Report 사용법
 
+## 1. Requirements
+- Python 2.7
+- docx 0.2.4
+- numpy 1.16.6
+- pandas 0.24.2
+- openpyxl 2.3.0
+- matplotlib 2.2.4
 
-## 1. CLI 사용법
+## Install
+``` Python
+ pip install -r requirements.txt
+```
+---
+## 2. CLI 사용법
 ### 필수 command
 - 파일종류 : 해당 실험의 종류 
   - ex) --sa12, --sa15, --sa10_1
@@ -32,7 +44,7 @@
 - python excel2pdf.py --gui
 
 
-## 2. GUI 사용법
+## 3. GUI 사용법
 ## 메인화면
 ![GUI메인](/PDF/img/GUI메인.png)
 
