@@ -22,7 +22,6 @@ lml==0.0.9
 lxml==4.4.2
 matplotlib==2.2.4
 mkl-fft==1.0.15
-mkl-service==2.3.0
 numpy==1.16.6
 openpyxl==2.3.0
 pandas==0.24.2
@@ -49,3 +48,4 @@ wcwidth==0.1.8
 win-unicode-console==0.5
 wincertstore==0.2
 xlrd==1.2.0
+mkl-service==2.3.0

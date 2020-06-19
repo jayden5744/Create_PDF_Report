@@ -35,8 +35,10 @@ def get_args():
     parser.add_argument('--sa13', action='store_true', help='SA13파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa14', action='store_true', help='SA14파일을 변환합니다.'.decode('utf-8'))
     parser.add_argument('--sa15', action='store_true', help='SA15파일을 변환합니다.'.decode('utf-8'))
-    parser.add_argument('--path', type=str, help='엑셀파일이 들어있는 폴더의 경로를 입력하세요.'.decode('utf-8'))
-    parser.add_argument('--save_path', type=str, help='PDF를 저장할 폴더의 경로를 입력하세요.'.decode('utf-8'))
+    parser.add_argument('--path', type=str, default=os.getcwd(),
+                        help='엑셀파일이 들어있는 폴더의 경로를 입력하세요.'.decode('utf-8'))
+    parser.add_argument('--save_path', type=str, default=os.getcwd() + '/pdf',
+                        help='PDF를 저장할 폴더의 경로를 입력하세요.'.decode('utf-8'))
     parser.add_argument('--filename', type=str, help='엑셀파일 이름을 입력하세요.'.decode('utf-8'))
     parser.add_argument('--title', type=str, help='시험제목을 입력하세요.'.decode('utf-8'))
     parser.add_argument('--description', default='', type=str, help='시험 설명을 입력하세요.'.decode('utf-8'))
