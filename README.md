@@ -3,10 +3,13 @@
 ## 1. Requirements
 - Python 2.7
 - docx 0.2.4
+- python-docx 0.8.10
 - numpy 1.16.6
 - pandas 0.24.2
 - openpyxl 2.3.0
 - matplotlib 2.2.4
+- xlrd 1.2.0
+- comtypes 1.1.7
 
 ## Install
 ``` Python
