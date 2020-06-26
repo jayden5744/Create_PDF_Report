@@ -14,13 +14,20 @@ from docx import Document
 from docx.oxml.ns import qn
 import matplotlib.pyplot as plt
 from openpyxl import load_workbook
-import matplotlib.font_manager as fm
 from docx.shared import Inches, RGBColor
 from comtypes import COMError
 import sys
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+plt.rcParams['axes.grid'] = True
+
+# 그래프에서 한글을 쓰고 싶을 경우
+# import matplotlib
+# import matplotlib.font_manager as fm
+# font_location = 'C:\\WINDOWS\\Fonts\\NanumBarunGothic.ttf'  # 폰트의 경로
+# fon_name =fm.FontProperties(fname=font_location).get_name()
+# matplotlib.rc('font', family=fon_name)
 
 
 class TkErrorCatcher:
@@ -238,8 +245,8 @@ def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
         value2 = pd.DataFrame(value2[1:])
         value2.columns = column
         table_data.append(value2)
-        plt.rcParams["figure.figsize"] = (10, 6)
-        fig, ax1 = plt.subplots()
+        fig = plt.figure(figsize=(10, 6))
+        ax1 = fig.add_subplot(1, 1, 1)
         ax2 = ax1.twinx()
         # fontprop = change_font() / fontproperties=fontprop
         line1 = ax1.plot(value2['TIME'], value2['AC_IRMS_1'], color='b', label='AC_IRMS_1')
@@ -384,7 +391,8 @@ def convert_sa9(sa09_name, sa09_title, sa09_description, sa09_path, sa09_save_pa
         all_graph_title.append(graph_title)
 
     for i in range(len(all_x_axis)):
-        fig, ax1 = plt.subplots()
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1, 1, 1)
         # fontprop = change_font()
         ax2 = ax1.twinx()
         line1 = ax1.plot(all_x_axis[i], all_y_axis[i][0], color='b', label='AC_VRMS_A')
@@ -393,12 +401,10 @@ def convert_sa9(sa09_name, sa09_title, sa09_description, sa09_path, sa09_save_pa
         ax1.set_xlabel('Time(secs)', size=10)
         ax1.set_ylabel('Voltage(V)', size=10)
         ax2.set_ylabel('Current(A)', size=10)
-        ax1.set_xlim(10, 100)
-        ax1.set_ylim(180, 340)
-        ax2.set_ylim(0, 5)
-        ax1.set_title(all_graph_title[i], size=15)
+
         lines = line1 + line2 + line3
         labels = ['AC_VRMS_A', 'AC_IRMS_A', 'AC_IRMS_PASS']
+        plt.title(all_graph_title[i].decode('utf-8'), size=15)
         plt.legend(lines, labels, loc=3)
         plt.grid(True)
         fig.tight_layout()
@@ -490,7 +496,8 @@ def convert_sa9_1(sa09_1_name, sa09_1_title, sa09_1_description, sa09_1_path, sa
         column = value[0]
         value = pd.DataFrame(value[1:])
         value.columns = column
-        fig, ax1 = plt.subplots()
+        fig = plt.figure()
+        ax1 = fig.add_subplot(1, 1, 1)
         ax2 = ax1.twinx()
         # fontprop = change_font()
         line1 = ax1.plot(value['TIME'], value['U1'], color='c', label='AC_V_A')
@@ -499,9 +506,9 @@ def convert_sa9_1(sa09_1_name, sa09_1_title, sa09_1_description, sa09_1_path, sa
         ax1.set_ylabel('Voltage(V)', size=10)
         ax2.set_ylabel('Current(A)', size=10)
         ax1.set_xlim(0, )
-        ax1.set_title('Voltage Ride-Through (Trip time, Waveform)', size=15)
         lines = line1 + line2
         labels = ['AC_V_A', 'AC_I_A']
+        plt.title('Voltage Ride-Through (Trip time, Waveform)'.decode('utf-8'), size=15)
         plt.legend(lines, labels, loc=3)
         plt.grid(True)
         fig.tight_layout()
@@ -613,8 +620,8 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
         all_graph_title.append(graph_title)
 
     for i in range(len(all_x_axis)):
-        fig, ax1 = plt.subplots()
-        plt.rcParams["figure.figsize"] = (12, 6)
+        fig = plt.figure(figsize=(12, 6))
+        ax1 = fig.add_subplot(1, 1, 1)
         ax2 = ax1.twinx()
         # fontprop = change_font()
         line1 = ax1.plot(all_x_axis[i], all_y_axis[i][0], color='b', label='AC_FREQ_A')
@@ -623,12 +630,9 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
         ax1.set_xlabel('Time(secs)', size=10)
         ax1.set_ylabel('Frequency(Hz)', size=10)
         ax2.set_ylabel('Current(A)', size=10)
-        # ax1.set_xlim(0, 1000)
-        # ax1.set_ylim(58, 62.5)
-        # ax2.set_ylim(0, 7)
-        ax1.set_title(all_graph_title[i], size=15)
         lines = line1 + line2 + line3
         labels = ['AC_FREQ_A', 'AC_IRMS_A', 'AC_IRMS_PASS']
+        plt.title(all_graph_title[i].decode('utf-8'), size=15)
         plt.legend(lines, labels, loc=3)
         plt.grid(True)
         fig.tight_layout()
@@ -716,19 +720,20 @@ def convert_sa10_1(sa10_1_name, sa10_1_title, sa10_1_description, sa10_1_path, s
         column = value[0]
         value = pd.DataFrame(value[1:])
         value.columns = column
-        plt.rcParams["figure.figsize"] = (10, 6)
-        fig, ax1 = plt.subplots()
+
+        fig = plt.figure(figsize=(10, 6))
+        ax1 = fig.add_subplot(1, 1, 1)
         ax2 = ax1.twinx()
-        # fontprop = change_font()
+
         line1 = ax1.plot(value['TIME'], value['I1'], color='c', label='AC_I_A', linewidth=0.2)
         line2 = ax2.plot(value['TIME'], value['Target F'], color='r', label='Target F')
         ax1.set_xlabel('Time(secs)', size=10)
         ax1.set_ylabel('Current(A)', size=10)
         ax2.set_ylabel('Frequency (Hz)', size=10)
-        ax1.set_title('Frequency Ride-Through LF2 (Trip time, Waveform)', size=15)
         ax1.set_xlim(0, )
         lines = line1 + line2
         labels = ['AC_I_A', 'Target F']
+        plt.title('Frequency Ride-Through LF2 (Trip time, Waveform)'.decode('utf-8'), size=15)
         plt.legend(lines, labels, loc=1)
         plt.grid(True)
         fig.tight_layout()
@@ -828,14 +833,11 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
         value2 = pd.DataFrame(value2[1:])
         value2.columns = ['time_min', 'min', 'time_max', 'max']
         value2 = value2.astype({'time_min': np.float, 'min': np.float, 'time_max': np.float, 'max': np.float})
-        fig = plt.figure()
-        plt.rcParams["figure.figsize"] = (10, 6)
-        plt.rcParams['axes.grid'] = True
+        fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(df['TIME'], df['AC_IRMS_1'], color='b')
         ax.plot(value2['time_min'], value2['min'], color='r', linestyle='--', label='min')
         ax.plot(value2['time_max'], value2['max'], color='r', linestyle='--', label='max')
-        # ax.set_xlim(0, 30)
         plt.xlabel('Time(secs)', size=10)
         plt.ylabel('Power(W)', size=10)
         plt.legend(['AC_IRMS_1', 'min', 'max'])
@@ -935,7 +937,6 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
          'Reactive Power 3 (pu)']]
 
     fig = plt.figure()
-    plt.rcParams["figure.figsize"] = (20, 20)
     ax = fig.add_subplot(1, 1, 1)
     # circle 그리기
     circle_center = (0, 0)
@@ -991,7 +992,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     ax.set_ylim(-1, 1)
     ax.set_xticks([-1.0, 0, +1.0])
     ax.set_xticklabels(["-100", "0", "100"])
-    ax.set_yticks([-1.0, 0, +1.0], ["-100", "0", "100"])
+    ax.set_yticks([-1.0, 0, +1.0])
     ax.set_yticklabels(["-100", "0", "100"])
     ax.set_xlabel('Active Power (% nameplate)', size=10)
     ax.set_ylabel('Reactive Power(% nameplate)', size=10)
@@ -1105,10 +1106,7 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
     index_up = df[df['Dataset File'].str.contains('up') == True].index
     create_folder(sa13_path + '/img')  # 폴더가 존재하는지 확인하고 없으면 생성
     for i in range(len(index_down)):
-        fig = plt.figure()
-        plt.rcParams["figure.figsize"] = (10, 6)
-        plt.rcParams['axes.grid'] = True
-
+        fig = plt.figure(figsize=(10, 6))
         img_title = df['Dataset File'][index_down[i]].decode("UTF-8").encode("EUC-KR")
         if i == 0:
             vv_1_1000 = df[0:index_down[i]]
@@ -1128,8 +1126,6 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
         ax.set_xticklabels(['90', '95', '100', '105', '110'])
         ax.set_yticks([-1.5, -1, -0.5, 0, 0.5, 1.0, 1.5])
         ax.set_yticklabels(['-150', '-100', '-50', '0', '50', '100', '150'])
-        print(img_title)
-        print(type(img_title))
         plt.savefig(sa13_path + '/img/' + img_title + '.png')
 
     # 사용하기 위한 변수 선언
@@ -1233,19 +1229,17 @@ def convert_sa14(sa14_name, sa14_title, sa14_description, sa14_path, sa14_save_p
         column2 = value2[0]
         value2 = pd.DataFrame(value2[1:])
         value2.columns = column2
-        fig = plt.figure()
-        # fontprop = change_font()
-        plt.rcParams["figure.figsize"] = (10, 6)
-        plt.rcParams['axes.grid'] = True
+        fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(1, 1, 1)
+        # fontprop = change_font()
         ax.plot(graph_df['AC_FREQ_1'], graph_df['Y'], color='b', linestyle='', marker='o')
         ax.plot(value2['freq'], value2['target'], color='k', label='target')
         ax.plot(value2['freq'], value2['min'], color='r', linestyle='--', label='min')
         ax.plot(value2['freq'], value2['max'], color='r', linestyle='--', label='max')
-        ax.set_xlim(58, 66)
+        ax.set_xlim(int(value2['freq'][0]), int(value2['freq'][len(value2['freq'])-1]))
         plt.xlabel('Frequence(Hz)', size=10)
         plt.ylabel('Active Power(W)', size=10)
-        plt.title('FW Characterastic Curve 2 시험'.decode('utf-8'), size=15)
+        plt.title('FW Characterastic Curve 2'.decode('utf-8'), size=15)
         plt.legend(['100% Power', 'FW curve', 'FW curve min', 'FW curve max'])
         plt.grid(True)
         fig.tight_layout()
@@ -1351,9 +1345,7 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
         column2 = value2[0]
         value2 = pd.DataFrame(value2[1:])
         value2.columns = column2
-        fig = plt.figure()
-        plt.rcParams["figure.figsize"] = (10, 6)
-        plt.rcParams['axes.grid'] = True
+        fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(graph_df['AC_VRMS_1'], graph_df['Y'], color='b', linestyle='', marker='o')
         ax.plot(value2['Voltage'], value2['target'], color='k', label='target')
