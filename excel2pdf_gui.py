@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 import ttk
 import excel2pdf
@@ -50,7 +53,7 @@ class Pdf:
         self.convert_b.grid(row=4, column=3, sticky='ew')
 
     def path_button_press(self):
-        value = tkFileDialog.askopenfilename(parent=self.F)
+        value = tkFileDialog.askopenfilename(parent=self.F, type=str)
         self.path = value
         self.path_label = Label(self.F, text=self.path, anchor='center')
         self.path_label.grid(row=0, column=1, columnspan=3, sticky='ew')
@@ -66,44 +69,44 @@ class Pdf:
 
     def convert_pdf(self):
         file_type = self.comb_box.get()
-        name = self.path.split('/')[-1]
-        name = name.split('.')[0]
-        path = self.path.split('/')[0:-1]
-        path = str('/'.join(path))
-        title = self.title_entry.get()
-        description = self.des_Text.get(1.0, 20.30)
-        save_path = str(self.save_path)
+        name = self.path.decode("UTF-8").encode("EUC-KR").split('/')[-1]
+        name = str(name.split('.xls')[0])
+        path = self.path.decode("UTF-8").encode("EUC-KR").split('/')[0:-1]
+        path = str(str('/'.join(path)))
+        title = str(self.title_entry.get())
+        description = str(self.des_Text.get(1.0, 20.30))
+        save_path = str(self.save_path.decode("UTF-8").encode("EUC-KR"))
 
         if file_type == 'SA8':
             excel2pdf.convert_sa8(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA9':
             excel2pdf.convert_sa9(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA9_1':
             excel2pdf.convert_sa9_1(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA10':
             excel2pdf.convert_sa10(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA10_1':
             excel2pdf.convert_sa10_1(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA11':
             excel2pdf.convert_sa11(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA12':
             excel2pdf.convert_sa12(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA13':
             excel2pdf.convert_sa13(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA14':
             excel2pdf.convert_sa14(name, title, description, path, save_path)
-            self.info()
+
         elif file_type == 'SA15':
             excel2pdf.convert_sa15(name, title, description, path, save_path)
-            self.info()
+        self.info()
 
 
 def init():

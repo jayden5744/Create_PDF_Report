@@ -109,7 +109,7 @@ def _get_xlrd_cell_value(cell):
 
 # xls파일을 xlsx로 변환
 def xls2xlsx(name, path, **kw):
-    xls_name = path + '/' + name + '.xls'
+    xls_name = str(str(path) + '\\' + str(name) + ".xls")
     book_xls = xlrd.open_workbook(xls_name, formatting_info=True, ragged_rows=True, **kw)
     book_xlsx = openpyxl.workbook.Workbook()
 
@@ -139,14 +139,13 @@ def xls2xlsx(name, path, **kw):
 #     return fontprop
 
 
-def load_excel(name, path):
-    load_wb = ''
+def load_excel(name, dic_path):
+    path = str(str(dic_path) + '\\' + str(name) + ".xlsx")
     try:
-        load_wb = load_workbook(str(path) + '\\' + str(name) + ".xlsx")
-
+        load_wb = load_workbook(path)
     except IOError:  # xls파일인 경우
-        xls2xlsx(name, path)
-        load_wb = load_workbook(str(path) + '\\' + str(name) + ".xlsx")
+        xls2xlsx(name, dic_path)
+        load_wb = load_workbook(path)
 
     except TypeError as e:
         print "오류가 발생하였습니다. 파일을 다른이름으로 저장 후 다시 해보시기 바랍니다.".decode('utf-8')
@@ -155,7 +154,7 @@ def load_excel(name, path):
 
 
 def create_folder(directory):
-    directory = directory.decode('utf-8')
+    directory = directory
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -165,7 +164,7 @@ def create_folder(directory):
 
 def make_pdf(name, sa15_path, save_path):
     # 파일 경로 절대경로로
-    in_file = os.path.abspath(sa15_path + '/doxs/' + name.decode('utf-8') + '.docx')
+    in_file = os.path.abspath(sa15_path + '/doxs/' + name + '.docx')
     out_file = os.path.abspath(str(save_path) + '\\' + name)
 
     # word형식의 파일을 열기
@@ -278,7 +277,7 @@ def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
     for i in range(len(csv_name)):
         document.add_page_break()
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
         document.add_paragraph(mer_title, style='ListNumber')
@@ -301,7 +300,7 @@ def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
         document.add_picture(sa8_path + '/img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -318,7 +317,7 @@ def convert_sa8(sa8_name, sa8_title, sa8_description, sa8_path, sa8_save_path):
 
     create_folder(sa8_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa8_path + '/doxs/' + sa8_name.decode('utf-8') + '.docx')
+    document.save(sa8_path + '/doxs/' + sa8_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa8_name, sa8_path, sa8_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -428,14 +427,14 @@ def convert_sa9(sa09_name, sa09_title, sa09_description, sa09_path, sa09_save_pa
         for i in range(len(csv_name)):
             document.add_page_break()
             try:
-                mer_title = str(p_title[i])
+                mer_title = p_title[i]
             except IndexError:
                 mer_title = ''
-            document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+            document.add_paragraph(mer_title, style='ListNumber')
             document.add_picture(sa09_path + '/img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
             last_paragraph = document.paragraphs[-1]
             last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-            caption = '<' + str(mer_title) + '>'  # 캡션 달기
+            caption = '<' + mer_title + '>'  # 캡션 달기
             document.add_paragraph(caption.decode('utf-8'), style=style_2)
             last_paragraph = document.paragraphs[-1]
             last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -453,11 +452,11 @@ def convert_sa9(sa09_name, sa09_title, sa09_description, sa09_path, sa09_save_pa
         document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
     except Exception as e:
         create_folder(sa09_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
-        document.save(sa09_path + '/doxs/' + sa09_name.decode('utf-8') + '.docx')
+        document.save(sa09_path + '/doxs/' + sa09_name + '.docx')
         print(e)
     create_folder(sa09_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa09_path + '/doxs/' + sa09_name.decode('utf-8') + '.docx')
+    document.save(sa09_path + '/doxs/' + sa09_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa09_name, sa09_path, sa09_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -532,14 +531,14 @@ def convert_sa9_1(sa09_1_name, sa09_1_title, sa09_1_description, sa09_1_path, sa
         for i in range(len(csv_name)):
             document.add_page_break()
             try:
-                mer_title = str(p_title[i])
+                mer_title = p_title[i]
             except IndexError:
                 mer_title = ''
-            document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+            document.add_paragraph(mer_title, style='ListNumber')
             document.add_picture(sa09_1_path + '/img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
             last_paragraph = document.paragraphs[-1]
             last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-            caption = '<' + str(mer_title) + '>'  # 캡션 달기
+            caption = '<' + mer_title + '>'  # 캡션 달기
             document.add_paragraph(caption.decode('utf-8'), style=style_2)
             last_paragraph = document.paragraphs[-1]
             last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -557,12 +556,12 @@ def convert_sa9_1(sa09_1_name, sa09_1_title, sa09_1_description, sa09_1_path, sa
         document.add_paragraph(str(load_ws['C2'].value).decode('utf-8'), style=style_2)
     except Exception as e:
         create_folder(sa09_1_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
-        document.save(sa09_1_path + '/doxs/' + sa09_1_name.decode('utf-8') + '.docx')
+        document.save(sa09_1_path + '/doxs/' + sa09_1_name + '.docx')
         print(e)
 
     create_folder(sa09_1_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa09_1_path + '/doxs/' + sa09_1_name.decode('utf-8') + '.docx')
+    document.save(sa09_1_path + '/doxs/' + sa09_1_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa09_1_name, sa09_1_path, sa09_1_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -612,8 +611,10 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
         all_x_axis.append(x_axis)
         all_y_axis.append(y_axis)
         all_graph_title.append(graph_title)
+
     for i in range(len(all_x_axis)):
         fig, ax1 = plt.subplots()
+        plt.rcParams["figure.figsize"] = (12, 6)
         ax2 = ax1.twinx()
         # fontprop = change_font()
         line1 = ax1.plot(all_x_axis[i], all_y_axis[i][0], color='b', label='AC_FREQ_A')
@@ -622,16 +623,16 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
         ax1.set_xlabel('Time(secs)', size=10)
         ax1.set_ylabel('Frequency(Hz)', size=10)
         ax2.set_ylabel('Current(A)', size=10)
-        ax1.set_xlim(0, 1000)
-        ax1.set_ylim(58, 62.5)
-        ax2.set_ylim(0, 7)
+        # ax1.set_xlim(0, 1000)
+        # ax1.set_ylim(58, 62.5)
+        # ax2.set_ylim(0, 7)
         ax1.set_title(all_graph_title[i], size=15)
         lines = line1 + line2 + line3
         labels = ['AC_FREQ_A', 'AC_IRMS_A', 'AC_IRMS_PASS']
         plt.legend(lines, labels, loc=3)
         plt.grid(True)
         fig.tight_layout()
-        create_folder(sa10_path + 'img/')  # 폴더가 존재하는지 확인하고 없으면 생성
+        create_folder(sa10_path + '/img/')  # 폴더가 존재하는지 확인하고 없으면 생성
         plt.savefig(sa10_path +'/img/' + str(csv_name[i].split('.')[0]) + '.png')
     # 사용하기 위한 변수 선언
     document = Document()
@@ -655,14 +656,14 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
     for i in range(len(csv_name)):
         document.add_page_break()
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa10_path + '/img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -681,7 +682,7 @@ def convert_sa10(sa10_name, sa10_title, sa10_description, sa10_path, sa10_save_p
 
     create_folder(sa10_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa10_path + '/doxs/' + sa10_name.decode('utf-8') + '.docx')
+    document.save(sa10_path + '/doxs/' + sa10_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa10_name, sa10_path, sa10_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -756,14 +757,14 @@ def convert_sa10_1(sa10_1_name, sa10_1_title, sa10_1_description, sa10_1_path, s
     for i in range(len(csv_name)):
         document.add_page_break()
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa10_1_path + '/img/' + str(csv_name[i].split('.')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -782,7 +783,7 @@ def convert_sa10_1(sa10_1_name, sa10_1_title, sa10_1_description, sa10_1_path, s
 
     create_folder(sa10_1_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa10_1_path + '/doxs/' + sa10_1_name.decode('utf-8') + '.docx')
+    document.save(sa10_1_path + '/doxs/' + sa10_1_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa10_1_name, sa10_1_path, sa10_1_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -803,7 +804,7 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
     all_value = pd.DataFrame(all_value[1:])
     p_title = all_value[1][1:].dropna(axis=0).reset_index(drop=True)  # 기능 시험 결과
     r_title = all_value[2][1:].dropna(axis=0).reset_index(drop=True)  # 결과 검토
-    csv_name = all_value[all_value[0].str.contains('.csv') == True][0][1:].reset_index(drop=True).values
+    csv_name = all_value[all_value[0].str.contains('.csv') == True][0].reset_index(drop=True).values
 
     for sheet_name in csv_name:
         load_ws2 = load_wb[sheet_name]
@@ -814,8 +815,9 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
                 row_value.append(cell.value)
             value.append(row_value)
         value = pd.DataFrame(value[1:])
-        df = value[[0, 3]]
-        df.columns = ['TIME', 'AC_P_1']
+
+        df = value[[0, 2]]
+        df.columns = ['TIME', 'AC_IRMS_1']
         load_ws3 = load_wb[str(sheet_name.split('.csv')[0]) + '_plot']
         value2 = []
         for row2 in load_ws3.rows:
@@ -825,18 +827,18 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
             value2.append(row_value2)
         value2 = pd.DataFrame(value2[1:])
         value2.columns = ['time_min', 'min', 'time_max', 'max']
-
+        value2 = value2.astype({'time_min': np.float, 'min': np.float, 'time_max': np.float, 'max': np.float})
         fig = plt.figure()
         plt.rcParams["figure.figsize"] = (10, 6)
         plt.rcParams['axes.grid'] = True
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(df['TIME'], df['AC_P_1'], color='b')
+        ax.plot(df['TIME'], df['AC_IRMS_1'], color='b')
         ax.plot(value2['time_min'], value2['min'], color='r', linestyle='--', label='min')
         ax.plot(value2['time_max'], value2['max'], color='r', linestyle='--', label='max')
-        ax.set_xlim(0, 30)
+        # ax.set_xlim(0, 30)
         plt.xlabel('Time(secs)', size=10)
         plt.ylabel('Power(W)', size=10)
-        plt.legend(['AC_P_1', 'min', 'max'])
+        plt.legend(['AC_IRMS_1', 'min', 'max'])
         plt.grid(True)
         fig.tight_layout()
         create_folder(sa11_path + '/img')
@@ -865,14 +867,14 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
     for i in range(len(csv_name)):
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa11_path + '/img/' + str(csv_name[i].split('.csv')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -892,7 +894,7 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
 
     create_folder(sa11_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa11_path + '/doxs/' + sa11_name.decode('utf-8') + '.docx')
+    document.save(sa11_path + '/doxs/' + sa11_name + '.docx')
 
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa11_name, sa11_path, sa11_save_path)
@@ -912,7 +914,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
         for cell in row:
             row_value.append(cell.value)
         all_value.append(row_value)
-    all_value = pd.DataFrame(all_value[1:]).sort_values(by=3)
+    all_value = pd.DataFrame(all_value[1:])
     p_title = all_value[1].dropna(axis=0).reset_index(drop=True)  # 테이블 제목
     r_title = all_value[2].dropna(axis=0).reset_index(drop=True)  # 결과 검토
     result_summary = str(load_ws['A2'].value)
@@ -1030,9 +1032,9 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     num = np.sort(num[1:])
     # 테이블 작성
     document.add_page_break()
-    for i in range(len(p_title)):
+    for i in range(len(num)):
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
         document.add_paragraph(mer_title, style='ListNumber')
@@ -1044,6 +1046,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
         hdr_cells[3].text = '실제 역률 (A)'.decode('utf-8')
         hdr_cells[4].text = '실제 역률 (B)'.decode('utf-8')
         hdr_cells[5].text = '실제 역률 (C)'.decode('utf-8')
+
         for a, b, c, d, e, f in df2[df2['PF Target'] == num[i]].values.tolist():
             row_cells = table.add_row().cells
             row_cells[0].text = str(a)
@@ -1065,7 +1068,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
 
     create_folder(sa12_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa12_path + '/doxs/' + sa12_name.decode('utf-8') + '.docx')
+    document.save(sa12_path + '/doxs/' + sa12_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa12_name, sa12_path, sa12_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -1106,7 +1109,7 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
         plt.rcParams["figure.figsize"] = (10, 6)
         plt.rcParams['axes.grid'] = True
 
-        img_title = df['Dataset File'][index_down[i]]
+        img_title = df['Dataset File'][index_down[i]].decode("UTF-8").encode("EUC-KR")
         if i == 0:
             vv_1_1000 = df[0:index_down[i]]
         else:
@@ -1125,7 +1128,8 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
         ax.set_xticklabels(['90', '95', '100', '105', '110'])
         ax.set_yticks([-1.5, -1, -0.5, 0, 0.5, 1.0, 1.5])
         ax.set_yticklabels(['-150', '-100', '-50', '0', '50', '100', '150'])
-
+        print(img_title)
+        print(type(img_title))
         plt.savefig(sa13_path + '/img/' + img_title + '.png')
 
     # 사용하기 위한 변수 선언
@@ -1148,16 +1152,17 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
     # 기능시험결과
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
     for i in range(len(index_down)):
+        document.add_page_break()
         img_title = df['Dataset File'][index_down[i]]
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa13_path + '/img/' + str(img_title) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -1176,7 +1181,7 @@ def convert_sa13(sa13_name, sa13_title, sa13_description, sa13_path, sa13_save_p
 
     create_folder(sa13_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa13_path + '/doxs/' + sa13_name.decode('utf-8') + '.docx')
+    document.save(sa13_path + '/doxs/' + sa13_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa13_name, sa13_path, sa13_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -1268,14 +1273,14 @@ def convert_sa14(sa14_name, sa14_title, sa14_description, sa14_path, sa14_save_p
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
     for i in range(len(csv_name)):
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa14_path + '/img/' + str(csv_name[i].split('.csv')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -1294,7 +1299,7 @@ def convert_sa14(sa14_name, sa14_title, sa14_description, sa14_path, sa14_save_p
 
     create_folder(sa14_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa14_path + '/doxs/' + sa14_name.decode('utf-8') + '.docx')
+    document.save(sa14_path + '/doxs/' + sa14_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa14_name, sa14_path, sa14_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
@@ -1334,7 +1339,9 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
                 lst.append(i)
         graph_df = df.loc[lst, :]
         graph_df['Y'] = graph_df['AC_P_1'] + graph_df['AC_P_2'] + graph_df['AC_P_3']
-        load_ws3 = load_wb[str(sheet_name.split('.csv')[0]) + '_plot']
+        plot_sheet = sheet_name.split('.csv')[0] + '_plot'
+        load_ws3 = load_wb[str(plot_sheet.decode("UTF-8").encode("UTF-8"))]
+
         value2 = []
         for row2 in load_ws3.rows:
             row_value2 = []
@@ -1384,14 +1391,14 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
     document.add_paragraph('기능시험 결과'.decode('utf-8'), style='ListBullet')
     for i in range(len(csv_name)):
         try:
-            mer_title = str(p_title[i])
+            mer_title = p_title[i]
         except IndexError:
             mer_title = ''
-        document.add_paragraph(mer_title.decode('utf-8'), style='ListNumber')
+        document.add_paragraph(mer_title, style='ListNumber')
         document.add_picture(sa15_path + '/img/' + str(csv_name[i].split('.csv')[0]) + '.png', width=Inches(5))  # 그림 불러와서 넣기
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
-        caption = '<' + str(mer_title) + '>'  # 캡션 달기
+        caption = '<' + mer_title + '>'  # 캡션 달기
         document.add_paragraph(caption.decode('utf-8'), style=style_2)
         last_paragraph = document.paragraphs[-1]
         last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
@@ -1410,7 +1417,7 @@ def convert_sa15(sa15_name, sa15_title, sa15_description, sa15_path, sa15_save_p
 
     create_folder(sa15_path + '/doxs')  # 폴더가 존재하는지 확인하고 없으면 생성
     # docx파일을 생성을 위한 save('파일명')
-    document.save(sa15_path + '/doxs/' + sa15_name.decode('utf-8') + '.docx')
+    document.save(sa15_path + '/doxs/' + sa15_name + '.docx')
     print '-----------------Docs File을 성공적으로 불러왔습니다.---------------------'.decode('utf-8')
     make_pdf(sa15_name, sa15_path, sa15_save_path)
     print '-----------------PDF File을 성공적으로 만들었습니다.---------------------'.decode('utf-8')
