@@ -821,8 +821,8 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
             value.append(row_value)
         value = pd.DataFrame(value[1:])
 
-        df = value[[0, 2]]
-        df.columns = ['TIME', 'AC_IRMS_1']
+        df = value[[0, 3]]
+        df.columns = ['TIME', 'AC_P_1']
         load_ws3 = load_wb[str(sheet_name.split('.csv')[0]) + '_plot']
         value2 = []
         for row2 in load_ws3.rows:
@@ -835,12 +835,12 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
         value2 = value2.astype({'time_min': np.float, 'min': np.float, 'time_max': np.float, 'max': np.float})
         fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(df['TIME'], df['AC_IRMS_1'], color='b')
+        ax.plot(df['TIME'], df['AC_P_1'], color='b')
         ax.plot(value2['time_min'], value2['min'], color='r', linestyle='--', label='min')
         ax.plot(value2['time_max'], value2['max'], color='r', linestyle='--', label='max')
         plt.xlabel('Time(secs)', size=10)
         plt.ylabel('Power(W)', size=10)
-        plt.legend(['AC_IRMS_1', 'min', 'max'])
+        plt.legend(['AC_P_1', 'min', 'max'])
         plt.grid(True)
         fig.tight_layout()
         create_folder(sa11_path + '/img')
@@ -919,6 +919,8 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     all_value = pd.DataFrame(all_value[1:])
     p_title = all_value[1].dropna(axis=0).reset_index(drop=True)  # 테이블 제목
     r_title = all_value[2].dropna(axis=0).reset_index(drop=True)  # 결과 검토
+    d_column = [i for i in all_value[3].unique() if str(i) != 'nan']
+
     result_summary = str(load_ws['A2'].value)
     load_ws2 = load_wb[result_summary]
 
@@ -955,17 +957,19 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
         plt.plot([start_x, end_x], [start_y, end_y], color='#A9A9A9', label='_circle axis')
 
     # 시험 결과 가져와서 나타내기
-    target_lst = [1, 0.8, 0.9, -0.8, -0.9]
+    target_lst = np.sort(df2['PF Target'].unique())
     c_lst = ['b', 'g', 'r', 'c', 'y']  # marker 색깔
     m_lst = ['v', 'o', 's']  # marker 모양
     x_lst = ['Power 1 (pu)', 'Power 2 (pu)', 'Power 3 (pu)']
     y_lst = ['Reactive Power 1 (pu)', 'Reactive Power 2 (pu)', 'Reactive Power 3 (pu)']
     pf_min = boundary(df['PF Min Allowed'].unique())  # PF Pass.Fail
     pf_max = boundary(df['PF Max Allowed'].unique())  # PF Pass.Fail
+
     data_label = ['Phase A, PF = ', 'Phase B, PF =', 'Phase C, PF =']
     for i in range(len(target_lst)):
         temp = df3[df3['PF Target'] == target_lst[i]]
         x_max = max(temp['Power 1 (pu)'].max(), temp['Power 2 (pu)'].max(), temp['Power 3 (pu)'].max())
+
         if temp['Reactive Power 1 (pu)'].max() > 0:
             y_max = max(temp['Reactive Power 1 (pu)'].max(), temp['Reactive Power 2 (pu)'].max(),
                         temp['Reactive Power 3 (pu)'].max())
@@ -973,20 +977,22 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
             y_max = min(temp['Reactive Power 1 (pu)'].min(), temp['Reactive Power 2 (pu)'].min(),
                         temp['Reactive Power 3 (pu)'].min())
         if i == 0:
-            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')  # PF Target
-            ax.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--', label='_PF Pass/Fail Boundary')
-            ax.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
-                    label='PF Pass/Fail Boundary')  # PF Pass/Fail max
-        else:
-            ax.plot([0, x_max], [0, pf_min[i]], color='r', linestyle='--',
-                    label='_PF Pass/Fail Boundary')  # 두번째부터 범례 표시X
-            ax.plot([0, x_max], [0, pf_max[i]], color='r', linestyle='--',
-                    label='_PF Pass/Fail Boundary')  # 두번째부터 범례 표시X
-            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='_PF target')  # 두번째부터 범례 표시X
+            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')
+            ax.plot([0, (1-(pf_min[i] ** 2)) ** 0.5], [0, pf_min[i]], color='r', linestyle='--',
+                    label='_PF Pass/Fail Boundary')
+            ax.plot([0, (1-(pf_max[i] ** 2)) ** 0.5], [0, pf_max[i]], color='r', linestyle='--',
+                    label='PF Pass/Fail Boundary')
+        else:    # 두번째부터 범례 표시X
+            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='_PF target')
+            ax.plot([0, (1-(pf_min[i] ** 2)) ** 0.5], [0, pf_min[i]], color='r', linestyle='--',
+                    label='_PF Pass/Fail Boundary')
+            ax.plot([0, (1-(pf_max[i] ** 2)) ** 0.5], [0, pf_max[i]], color='r', linestyle='--',
+                    label='_PF Pass/Fail Boundary')
 
         for j in range(len(x_lst)):
             ax.plot(temp[str(x_lst[j])], temp[str(y_lst[j])], linestyle='', marker=m_lst[j], c=c_lst[i], markersize=5,
                     alpha=0.5, label=(data_label[j] + str(target_lst[i])))
+
     ax.set_aspect('equal')  # 정사각형
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
@@ -1029,8 +1035,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     last_paragraph = document.paragraphs[-1]
     last_paragraph.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.CENTER  # 중앙정렬
 
-    num = df2['PF Target'].unique()
-    num = np.sort(num[1:])
+    num = [i for i in target_lst if i in d_column]
     # 테이블 작성
     document.add_page_break()
     for i in range(len(num)):
