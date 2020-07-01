@@ -37,7 +37,7 @@
  - python excel2pdf.py --sa12 --filename "SA12"
  - python excel2pdf.py --sa15 --filename "SA15" --title "실험제목" --description "시험설명" --path "C://Users" --save_path "C://Users/save_folder"
  
- ![CLI예제](/PDF/img/CLI예제.png)
+ ![CLI예제](/img/CLI예제.png)
  - do you want to continue? : 같은 실험의 다른 파일을 변환하고 싶으면 y, 마치고 싶으면 n
  - Enter the following file name : 다음 엑셀파일의 이름
  - Enter the following title : 다음 파일 실험보고서에 제목으로 들어가게 될 내용
@@ -49,7 +49,7 @@
 
 ## 3. GUI 사용법
 ## 메인화면
-![GUI메인](/PDF/img/GUI메인.png)
+![GUI메인](/img/GUI메인.png)
 
 1. 파일경로 : 불러올 엑셀파일을 선택합니다.
 2. 시험종류 선택 : 보고서 유형을 sa08/sa09/sa9_1/sa10/sa10_1/sa11/sa12/sa13/sa14/sa15 중 선택합니다.
@@ -60,10 +60,10 @@
 
 ## 세부화면
 1. 메인화면 : 엑셀파일이 있는 폴더에 들어가서 해당 파일을 선택합니다.
-![GUI_1](/PDF/img/GUI_1.png)
+![GUI_1](/img/GUI_1.png)
 
 2. 시험종류 선택 : 해당되는 보고서 유형을 선택합니다.
-![GUI_2](/PDF/img/GUI_2.png)
+![GUI_2](/img/GUI_2.png)
 
 3. 저장경로 설정 : PDF파일을 저장할 경로를 선택합니다.
-![GUI_3](/PDF/img/GUI_3.png)
+![GUI_3](/img/GUI_3.png)
