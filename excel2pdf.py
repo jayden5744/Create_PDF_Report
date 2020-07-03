@@ -833,6 +833,7 @@ def convert_sa11(sa11_name, sa11_title, sa11_description, sa11_path, sa11_save_p
         value2 = pd.DataFrame(value2[1:])
         value2.columns = ['time_min', 'min', 'time_max', 'max']
         value2 = value2.astype({'time_min': np.float, 'min': np.float, 'time_max': np.float, 'max': np.float})
+
         fig = plt.figure(figsize=(10, 6))
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(df['TIME'], df['AC_P_1'], color='b')
@@ -936,7 +937,7 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     df2 = df[['Power Level (%)', 'Iteration', 'PF Target', 'PF Actual 1', 'PF Actual 2', 'PF Actual 3']]
     df3 = df[
         ['PF Target', 'Power 1 (pu)', 'Reactive Power 1 (pu)', 'Power 2 (pu)', 'Reactive Power 2 (pu)', 'Power 3 (pu)',
-         'Reactive Power 3 (pu)']]
+         'Reactive Power 3 (pu)', 'P Target at Rated (pu)', 'Q Target at Rated (pu)']]
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -966,24 +967,20 @@ def convert_sa12(sa12_name, sa12_title, sa12_description, sa12_path, sa12_save_p
     pf_max = boundary(df['PF Max Allowed'].unique())  # PF Pass.Fail
 
     data_label = ['Phase A, PF = ', 'Phase B, PF =', 'Phase C, PF =']
+
     for i in range(len(target_lst)):
         temp = df3[df3['PF Target'] == target_lst[i]]
-        x_max = max(temp['Power 1 (pu)'].max(), temp['Power 2 (pu)'].max(), temp['Power 3 (pu)'].max())
 
-        if temp['Reactive Power 1 (pu)'].max() > 0:
-            y_max = max(temp['Reactive Power 1 (pu)'].max(), temp['Reactive Power 2 (pu)'].max(),
-                        temp['Reactive Power 3 (pu)'].max())
-        else:
-            y_max = min(temp['Reactive Power 1 (pu)'].min(), temp['Reactive Power 2 (pu)'].min(),
-                        temp['Reactive Power 3 (pu)'].min())
         if i == 0:
-            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='PF target')
+            ax.plot([0, list(temp['P Target at Rated (pu)'])[0]], [0, list(temp['Q Target at Rated (pu)'])[0]]
+                    , color='k', linestyle='--', label='PF target')
             ax.plot([0, (1-(pf_min[i] ** 2)) ** 0.5], [0, pf_min[i]], color='r', linestyle='--',
                     label='_PF Pass/Fail Boundary')
             ax.plot([0, (1-(pf_max[i] ** 2)) ** 0.5], [0, pf_max[i]], color='r', linestyle='--',
                     label='PF Pass/Fail Boundary')
         else:    # 두번째부터 범례 표시X
-            ax.plot([0, x_max], [0, y_max], color='k', linestyle='--', label='_PF target')
+            ax.plot([0, list(temp['P Target at Rated (pu)'])[0]], [0, list(temp['Q Target at Rated (pu)'])[0]],
+                    color='k', linestyle='--', label='_PF target')
             ax.plot([0, (1-(pf_min[i] ** 2)) ** 0.5], [0, pf_min[i]], color='r', linestyle='--',
                     label='_PF Pass/Fail Boundary')
             ax.plot([0, (1-(pf_max[i] ** 2)) ** 0.5], [0, pf_max[i]], color='r', linestyle='--',
